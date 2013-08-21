@@ -70,8 +70,11 @@ class Route
 
 # ----- The actual CRUD implementation -----
 
+prefixTableName = (name) ->
+  "__truman__#{name}"
+
 getTable = (name) ->
-  table = JSON.parse(localStorage[name] || '{}')
+  table = JSON.parse(localStorage[prefixTableName(name)] || '{}')
   if !table.name?
     table.name = name
     table.rows = []
@@ -86,7 +89,7 @@ getNextId = (table) ->
   table.rows.length + 1
 
 saveTable = (table) ->
-  localStorage[table.name] = JSON.stringify(table)
+  localStorage[prefixTableName(table.name)] = JSON.stringify(table)
 
 createRecord = (tableName, data) ->
   table = getTable(tableName)
@@ -102,6 +105,9 @@ afterDelay = (delay, callback) ->
 
 window.Truman =
   delay: 1000
+
+  dropTable: (name) ->
+    delete localStorage[prefixTableName(name)]
 
 getDelay = ->
   Truman.delay
