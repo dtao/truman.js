@@ -30,6 +30,12 @@
             filter: alpha(opacity=75);
             z-index: 1;
         }
+
+        .container {
+            width: 95%;
+            max-width: 100%;
+            margin: auto;
+        }
     </style>
 
     <script><!--
@@ -40,10 +46,11 @@
                 table  = $('table');
 
             function addRowToTable(data) {
-                var row = $('<tr>').appendTo(table);
+                var row = $('<tr>').attr('data-id', data.id).appendTo(table);
                 $.each(['firstName', 'lastName', 'email', 'phone', 'address'], function(i, attr) {
                     $('<td>').text(data[attr]).appendTo(row);
                 });
+                $('<td>').html('<a class="delete" href="javascript:void(0);">Delete</a>').appendTo(row);
             }
 
             function displayNotice(message) {
@@ -89,10 +96,29 @@
                     dataType: 'json',
                     success: function(data) {
                         addRowToTable(data);
-                        displayNotice('Added contact ' + data.id + '!');
+                        displayNotice('Added "' + data.firstName + '" to contacts!');
                     },
                     complete: function() {
                         clearForm();
+                    }
+                });
+            });
+
+            $(document).on('click', 'a.delete', function() {
+                var row  = $(this).closest('tr'),
+                    name = $('td:first-child', row).text(),
+                    id   = row.attr('data-id');
+
+                if (!confirm('Are you sure you want to delete "' + name + '" from your contacts?')) {
+                    return false;
+                }
+
+                $.ajax({
+                    url: '/contacts/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        row.remove();
+                        displayNotice('Removed "' + name + '" from contacts!');
                     }
                 });
             });
@@ -156,6 +182,7 @@
                             <th>E-mail</th>
                             <th>Phone</th>
                             <th>Address</th>
+                            <th></th>
                         </tr>
                     </thead>
                 </table>

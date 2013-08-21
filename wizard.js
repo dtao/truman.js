@@ -7,7 +7,7 @@
       return afterDelay(1000, function() {
         var table;
         table = getTable(tableName);
-        return callback(table.rows);
+        return callback(compact(table.rows));
       });
     },
     get: function(tableName, recordId, callback) {
@@ -24,7 +24,7 @@
       return afterDelay(1000, function() {
         var attribute, record, table;
         table = getTable(tableName);
-        record = table.rows[recordId - 1];
+        record = table.rows[recordId - 1] || {};
         for (attribute in data) {
           record[attribute] = data[attribute];
         }
@@ -39,6 +39,16 @@
       return afterDelay(1000, function() {
         var record;
         record = createRecord(tableName, data);
+        return callback(record);
+      });
+    },
+    "delete": function(tableName, recordId, callback) {
+      return afterDelay(1000, function() {
+        var record, table;
+        table = getTable(tableName);
+        record = table.rows[recordId - 1];
+        table.rows[recordId - 1] = void 0;
+        saveTable(table);
         return callback(record);
       });
     }
@@ -57,10 +67,13 @@
     }
 
     Route.prototype.call = function(data, callback) {
-      if (this.method === 'GET') {
-        return this.get(callback);
-      } else {
-        return this.post(data, callback);
+      switch (this.method) {
+        case 'GET':
+          return this.get(callback);
+        case 'POST':
+          return this.post(data, callback);
+        case 'DELETE':
+          return this["delete"](callback);
       }
     };
 
@@ -78,6 +91,10 @@
       } else {
         return api.create(this.tableName, data, callback);
       }
+    };
+
+    Route.prototype["delete"] = function(callback) {
+      return api["delete"](this.tableName, this.recordId, callback);
     };
 
     return Route;

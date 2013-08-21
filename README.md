@@ -50,8 +50,8 @@ whatever you include in the request.
 
     DELETE /resources/1
 
-**Not yet implemented.** Delete the "resources" row with an ID of 1. The response will include the
-row data of the record you just deleted.
+Delete the "resources" row with an ID of 1. The response will include the row data of the record you
+just deleted.
 
 ### Footnotes
 

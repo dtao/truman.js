@@ -4,7 +4,7 @@ api =
   index: (tableName, callback) ->
     afterDelay 1000, ->
       table = getTable(tableName)
-      callback(table.rows)
+      callback(compact(table.rows))
 
   get: (tableName, recordId, callback) ->
     afterDelay 1000, ->
@@ -15,7 +15,7 @@ api =
     data = parseData(data) if typeof data == 'string'
     afterDelay 1000, ->
       table = getTable(tableName)
-      record = table.rows[recordId - 1]
+      record = table.rows[recordId - 1] || {}
       for attribute of data
         record[attribute] = data[attribute]
       saveTable(table)
@@ -25,6 +25,14 @@ api =
     data = parseData(data) if typeof data == 'string'
     afterDelay 1000, ->
       record = createRecord(tableName, data)
+      callback(record)
+
+  delete: (tableName, recordId, callback) ->
+    afterDelay 1000, ->
+      table = getTable(tableName)
+      record = table.rows[recordId - 1]
+      table.rows[recordId - 1] = undefined
+      saveTable(table)
       callback(record)
 
 # ----- Equally crappy routing logic -----
@@ -38,10 +46,10 @@ class Route
     @recordId = parts[1] if parts.length > 1
 
   call: (data, callback) ->
-    if @method == 'GET'
-      @get(callback)
-    else
-      @post(data, callback)
+    switch @method
+      when 'GET' then @get(callback)
+      when 'POST' then @post(data, callback)
+      when 'DELETE' then @delete(callback)
 
   get: (callback) ->
     if @recordId
@@ -56,6 +64,9 @@ class Route
 
     else
       api.create(@tableName, data, callback)
+
+  delete: (callback) ->
+    api.delete(@tableName, @recordId, callback)
 
 # ----- The actual CRUD implementation -----
 
