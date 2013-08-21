@@ -4,7 +4,7 @@
 <head>
     <title>Wizard.js example using jQuery</title>
     <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.css" />
-    <script type="text/javascript" src="../wizard.js"></script>
+    <script type="text/javascript" src="wizard.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.js"></script>
 
     <style type="text/css">
@@ -45,11 +45,30 @@
                 form   = $('form'),
                 table  = $('table');
 
+            function formatEmail(email) {
+                return '<a href="mailto:' + email + '">' + email + '</a>';
+            }
+
+            function formatAddress(address) {
+                return address.replace(/\n/g, '<br />');
+            }
+
             function addRowToTable(data) {
                 var row = $('<tr>').attr('data-id', data.id).appendTo(table);
-                $.each(['firstName', 'lastName', 'email', 'phone', 'address'], function(i, attr) {
-                    $('<td>').text(data[attr]).appendTo(row);
+                $.each([
+                    'firstName',
+                    'lastName',
+                    ['email', formatEmail],
+                    'phone',
+                    ['address', formatAddress]
+                ], function(i, attr) {
+                    if ($.isArray(attr)) {
+                        $('<td>').html(attr[1](data[attr[0]])).appendTo(row);
+                    } else {
+                        $('<td>').text(data[attr]).appendTo(row);
+                    }
                 });
+
                 $('<td>').html('<a class="delete" href="javascript:void(0);">Delete</a>').appendTo(row);
             }
 
@@ -127,6 +146,13 @@
 </head>
 
 <body>
+    <!-- Fork me on GitHub! -->
+    <a href="https://github.com/dtao/wizard.js">
+        <img style="position: absolute; top: 0; right: 0; border: 0;"
+             src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"
+             alt="Fork me on GitHub" />
+    </a>
+
     <div class="container">
         <div class="page-header">
             <h1>jQuery Example</h1>
