@@ -122,11 +122,24 @@ XMLHttpRequest::send = (data) ->
     clobberProperty(this, 'readyState', 4)
     clobberProperty(this, 'responseText', JSON.stringify(result))
 
-    handler = @onload || @onreadystatechange
-    handler() if handler?
+    handler = @onload || @onprogress || @onreadystatechange
+    if handler?
+      handler()
+
+    else
+      listeners = @interceptors && (@interceptors['load'] || @interceptors['progress']) || []
+      listener() for listener in listeners
 
   # This would give us normal behavior.
   # _send.apply(this, arguments)
+
+_addEventListener = XMLHttpRequest::addEventListener
+XMLHttpRequest::addEventListener = (name, listener) ->
+  @interceptors ?= {}
+  @interceptors[name] ?= []
+  @interceptors[name].push(listener)
+
+  _addEventListener.apply(this, arguments)
 
 _getAllResponseHeaders = XMLHttpRequest::getAllResponseHeaders
 XMLHttpRequest::getAllResponseHeaders = ->
