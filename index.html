@@ -2,13 +2,9 @@
 <html>
 
 <head>
-    <title>Truman.js example using jQuery</title>
+    <title>Truman.js</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="demo.css" />
-    <script type="text/javascript" src="truman.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.js"></script>
-    <script type="text/javascript" src="demo.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/bootstrap.css" />
 </head>
 
 <body>
@@ -21,122 +17,27 @@
 
     <div class="container">
         <div class="page-header">
-            <h1>Truman.js example using jQuery</h1>
-
-            <p class="lead">
-                This page uses <strong>Truman.js</strong> to simulate a backend so that jQuery code
-                like <code>$.ajax</code>, <code>$.getJSON</code>, etc. will all just work.
-            </p>
+            <h1>Truman.js</h1>
+            <p class="lead">Smoke &amp; mirrors so you can prototype quickly</p>
         </div>
 
-        <div id="index-page" class="row">
-            <div id="list-section" class="col-lg-6">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>First name</th>
-                            <th>Last name</th>
-                            <th>E-mail</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
+        <div class="list-group">
+            <a href="native" class="list-group-item">
+                <h3>Native Example</h3>
 
-            <div id="entry-section" class="col-lg-6">
-                <form action="/contacts" method="POST" class="form-horizontal">
-                    <fieldset>
-                        <legend>Add a new contact</legend>
+                <p>
+                    This example uses the browser's native <code>XMLHttpRequest</code> object to
+                    make AJAX requests.
+                </p>
+            </a>
 
-                        <div class="form-group">
-                            <label for="firstName" class="col-lg-3">First name</label>
-                            <div class="col-lg-9">
-                                <input class="form-control" type="text" name="firstName" />
-                            </div>
-                        </div>
+            <a href="jquery" class="list-group-item">
+                <h3>jQuery Example</h3>
 
-                        <div class="form-group">
-                            <label for="lastName" class="col-lg-3">Last name</label>
-                            <div class="col-lg-9">
-                                <input class="form-control" type="text" name="lastName" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email" class="col-lg-3">E-mail address</label>
-                            <div class="col-lg-9">
-                                <input class="form-control" type="text" name="email" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="phone" class="col-lg-3">Phone number</label>
-                            <div class="col-lg-9">
-                                <input class="form-control" type="text" name="phone" />
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="address" class="col-lg-3">Address</label>
-                            <div class="col-lg-9">
-                                <textarea class="form-control" name="address"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-lg-9 col-lg-offset-3">
-                                <input class="btn btn-primary" type="submit" value="Add" />
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-        </div>
-
-        <div id="edit-page" class="modal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form>
-                        <div class="modal-header">
-                            <h1>Edit</h1>
-                        </div>
-
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="firstName">First name</label>
-                                <input class="form-control" type="text" name="firstName" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="lastName">Last name</label>
-                                <input class="form-control" type="text" name="lastName" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="email">E-mail address</label>
-                                <input class="form-control" type="text" name="email" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phone">Phone number</label>
-                                <input class="form-control" type="text" name="phone" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="address">Address</label>
-                                <textarea class="form-control" name="address"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button class="cancel btn btn-default">Cancel</button>
-                            <input type="submit" class="btn btn-primary" value="Save Changes" />
-                        </div>
-                    </form>
-               </div>
-            </div>
+                <p>
+                    This example uses jQuery with <code>$.ajax</code>, <code>$.getJSON</code>, etc.
+                </p>
+            </a>
         </div>
     </div>
 </body>
