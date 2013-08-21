@@ -1,0 +1,36 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body.loading:after {
+  display: block;
+  position: fixed;
+  content: "";
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  background: #fff url(loading.gif) no-repeat center;
+  opacity: 0.75;
+  filter: alpha(opacity=75);
+  z-index: 1;
+}
+
+.container {
+  width: 95%;
+  max-width: 100%;
+  margin: auto;
+}
+
+tr td:last-child a {
+  visibility: hidden;
+}
+
+tr:hover td:last-child a {
+  visibility: visible;
+}

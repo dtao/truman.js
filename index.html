@@ -4,222 +4,10 @@
 <head>
     <title>Wizard.js example using jQuery</title>
     <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="demo.css" />
     <script type="text/javascript" src="wizard.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.js"></script>
-
-    <style type="text/css">
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        body.loading:after {
-            display: block;
-            position: fixed;
-            content: "";
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 100%;
-            width: 100%;
-            background: #fff url(loading.gif) no-repeat center;
-            opacity: 0.75;
-            filter: alpha(opacity=75);
-            z-index: 1;
-        }
-
-        .container {
-            width: 95%;
-            max-width: 100%;
-            margin: auto;
-        }
-
-        tr td:last-child a {
-            visibility: hidden;
-        }
-
-        tr:hover td:last-child a {
-            visibility: visible;
-        }
-    </style>
-
-    <script><!--
-        $(document).ready(function() {
-            var body    = $('body'),
-                header  = $('.page-header'),
-                table   = $('table');
-
-            function formatEmail(email) {
-                return '<a href="mailto:' + email + '">' + email + '</a>';
-            }
-
-            function formatAddress(address) {
-                return address.replace(/\n/g, '<br />');
-            }
-
-            function updateRow(row, data) {
-                var fields = [
-                    'firstName',
-                    'lastName',
-                    ['email', formatEmail],
-                    'phone',
-                    ['address', formatAddress]
-                ];
-
-                var cells = $('td', row);
-
-                $.each(fields, function(i, attr) {
-                    if ($.isArray(attr)) {
-                        $(cells[i]).html(attr[1](data[attr[0]]));
-                    } else {
-                        $(cells[i]).text(data[attr]);
-                    }
-                });
-            }
-
-            function addCellsToRow(row) {
-                var columnCount = table.find('tr:first-child > th').length;
-                while ($('td', row).length < columnCount) {
-                    $('<td>').appendTo(row);
-                }
-            }
-
-            function addButtonsToRow(row) {
-                var lastCell = $('<td>').appendTo(row);
-                var editButton = $('<a>')
-                    .addClass('edit btn btn-default')
-                    .html('<span class="glyphicon glyphicon-edit"></span>')
-                    .appendTo(lastCell);
-
-                var deleteButton = $('<a>')
-                    .addClass('delete btn btn-default')
-                    .html('<span class="glyphicon glyphicon-trash"></span>')
-                    .appendTo(lastCell);
-            }
-
-            function addRowToTable(data) {
-                var row = $('<tr>').attr('data-id', data.id).appendTo(table);
-
-                addCellsToRow(row);
-                updateRow(row, data);
-                addButtonsToRow(row);
-            }
-
-            function displayNotice(message) {
-                var notice = $('<div>')
-                    .addClass('alert alert-info')
-                    .text(message)
-                    .insertAfter(header);
-
-                setTimeout(function() {
-                    notice.slideUp(function() { notice.remove(); });
-                }, 3000);
-            }
-
-            function clearForms() {
-                $('input[type="text"], textarea').val('');
-            }
-
-            function hideModals() {
-                $('.modal').hide();
-            }
-
-            function updateFormFromRow(form, row) {
-                var id = row.attr('data-id');
-                form.attr('action', '/contacts/' + id);
-
-                $('input[name="firstName"]', form).val($('td:nth-child(1)', row).text());
-                $('input[name="lastName"]', form).val($('td:nth-child(2)', row).text());
-                $('input[name="email"]', form).val($('td:nth-child(3)', row).text());
-                $('input[name="phone"]', form).val($('td:nth-child(4)', row).text());
-                $('textarea[name="address"]', form).val($('td:nth-child(5)', row).text());
-            }
-
-            $(document).ajaxStart(function() {
-                body.addClass('loading');
-                hideModals();
-            });
-
-            $(document).ajaxComplete(function() {
-                body.removeClass('loading');
-            });
-
-            $.getJSON('/contacts', function(data) {
-                $.each(data, function(i, contact) {
-                    addRowToTable(contact);
-                });
-            });
-
-            $('form').submit(function(e) {
-                e.preventDefault();
-
-                var form   = $(this),
-                    route  = form.attr('action'),
-                    method = form.attr('method') || 'POST',
-                    data   = form.serializeArray();
-
-                $.ajax({
-                    url: route,
-                    type: method,
-                    data: data,
-                    dataType: 'json',
-                    success: function(data) {
-                        var id  = data.id,
-                            row = table.find('tr[data-id="' + id + '"]');
-
-                        if (row.length > 0) {
-                            updateRow(row, data);
-                            displayNotice('Updated "' + data.firstName + '"!');
-
-                        } else {
-                            addRowToTable(data);
-                            displayNotice('Added "' + data.firstName + '" to contacts!');
-                        }
-
-                        clearForms();
-                    }
-                });
-            });
-
-            $(document).on('click', 'a.edit', function() {
-                var row    = $(this).closest('tr'),
-                    id     = row.attr('data-id'),
-                    dialog = $('#edit-page'),
-                    form   = $('form', dialog);
-
-                updateFormFromRow(form, row);
-
-                dialog.show();
-            });
-
-            $(document).on('click', 'a.delete', function() {
-                var row  = $(this).closest('tr'),
-                    name = $('td:first-child', row).text(),
-                    id   = row.attr('data-id');
-
-                if (!confirm('Are you sure you want to delete "' + name + '" from your contacts?')) {
-                    return false;
-                }
-
-                $.ajax({
-                    url: '/contacts/' + id,
-                    type: 'DELETE',
-                    success: function() {
-                        row.remove();
-                        displayNotice('Removed "' + name + '" from contacts!');
-                    }
-                });
-            });
-
-            $(document).on('click', 'button.cancel', function(e) {
-                e.preventDefault();
-                hideModals();
-            });
-        });
-    --></script>
+    <script type="text/javascript" src="demo.js"></script>
 </head>
 
 <body>
@@ -232,7 +20,7 @@
 
     <div class="container">
         <div class="page-header">
-            <h1>jQuery Example</h1>
+            <h1>Wizard.js example using jQuery</h1>
 
             <p class="lead">
                 This page uses <strong>Wizard.js</strong> to simulate a backend so that jQuery code
@@ -257,36 +45,50 @@
             </div>
 
             <div id="entry-section" class="col-lg-6">
-                <form action="/contacts" method="POST">
+                <form action="/contacts" method="POST" class="form-horizontal">
                     <fieldset>
                         <legend>Add a new contact</legend>
 
                         <div class="form-group">
-                            <label for="firstName">First name</label>
-                            <input class="form-control" type="text" name="firstName" />
+                            <label for="firstName" class="col-lg-3">First name</label>
+                            <div class="col-lg-9">
+                                <input class="form-control" type="text" name="firstName" />
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="lastName">Last name</label>
-                            <input class="form-control" type="text" name="lastName" />
+                            <label for="lastName" class="col-lg-3">Last name</label>
+                            <div class="col-lg-9">
+                                <input class="form-control" type="text" name="lastName" />
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="email">E-mail address</label>
-                            <input class="form-control" type="text" name="email" />
+                            <label for="email" class="col-lg-3">E-mail address</label>
+                            <div class="col-lg-9">
+                                <input class="form-control" type="text" name="email" />
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="phone">Phone number</label>
-                            <input class="form-control" type="text" name="phone" />
+                            <label for="phone" class="col-lg-3">Phone number</label>
+                            <div class="col-lg-9">
+                                <input class="form-control" type="text" name="phone" />
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="address">Address</label>
-                            <textarea class="form-control" name="address"></textarea>
+                            <label for="address" class="col-lg-3">Address</label>
+                            <div class="col-lg-9">
+                                <textarea class="form-control" name="address"></textarea>
+                            </div>
                         </div>
 
-                        <input class="btn btn-primary" type="submit" value="Add" />
+                        <div class="form-group">
+                            <div class="col-lg-9 col-lg-offset-3">
+                                <input class="btn btn-primary" type="submit" value="Add" />
+                            </div>
+                        </div>
                     </fieldset>
                 </form>
             </div>
