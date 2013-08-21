@@ -3,9 +3,20 @@
 
   describe('Truman', function() {
     beforeEach(function() {
-      return Truman.delay = 0;
+      Truman.delay = 0;
+      return Truman.dropTable('examples');
     });
-    return describe('intercepts handlers', function() {
+    beforeEach(function() {
+      return this.addMatchers({
+        toHaveBeenCalledWithJson: function(data) {
+          var actualData;
+          actualData = JSON.parse(this.actual.mostRecentCall.args[0]);
+          expect(actualData).toEqual(data);
+          return true;
+        }
+      });
+    });
+    describe('intercepts handlers', function() {
       var createGetRequest, handler, prepareAsyncTest;
       handler = null;
       beforeEach(function() {
@@ -72,6 +83,58 @@
             return handler(xhr.responseText);
           });
           return xhr.send();
+        });
+      });
+    });
+    return describe('creates fake records when sending POST requests to "create"-like routes', function() {
+      var handler;
+      handler = null;
+      beforeEach(function() {
+        return handler = jasmine.createSpy();
+      });
+      it('using form-encoded data', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', '/examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          return xhr.send('title=Example%20Title&content=Example%20Content');
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            title: 'Example Title',
+            content: 'Example Content'
+          });
+        });
+      });
+      return xit('using FormData', function() {
+        runs(function() {
+          var formData, xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', '/examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          formData = new FormData();
+          formData.append('title', 'Example Title');
+          formData.append('content', 'Example Content');
+          return xhr.send(formData);
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            title: 'Example Title',
+            content: 'Example Content'
+          });
         });
       });
     });
