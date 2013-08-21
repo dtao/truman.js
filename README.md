@@ -56,9 +56,13 @@ just deleted.
 JavaScript Usage
 ----------------
 
-For now, Truman.js doesn't offer much in the way of a programmatic API. There's one little option:
-you can set the `Truman.delay` property to the number of milliseconds you'd like for your fake AJAX
+For now, Truman.js doesn't offer much in the way of a programmatic API.
+
+You can set the `Truman.delay` property to the number of milliseconds you'd like for your fake AJAX
 requests to take. (The default is 1000, or 1 second.)
+
+You can also call `Truman.dropTable("resources")` to delete the table called "resources" (so the
+next call you make to "/resources" will return an empty list).
 
 ### Footnotes
 
