@@ -36,14 +36,21 @@
             max-width: 100%;
             margin: auto;
         }
+
+        tr td:last-child a {
+            visibility: hidden;
+        }
+
+        tr:hover td:last-child a {
+            visibility: visible;
+        }
     </style>
 
     <script><!--
         $(document).ready(function() {
-            var body   = $('body'),
-                header = $('.page-header'),
-                form   = $('form'),
-                table  = $('table');
+            var body    = $('body'),
+                header  = $('.page-header'),
+                table   = $('table');
 
             function formatEmail(email) {
                 return '<a href="mailto:' + email + '">' + email + '</a>';
@@ -53,23 +60,52 @@
                 return address.replace(/\n/g, '<br />');
             }
 
-            function addRowToTable(data) {
-                var row = $('<tr>').attr('data-id', data.id).appendTo(table);
-                $.each([
+            function updateRow(row, data) {
+                var fields = [
                     'firstName',
                     'lastName',
                     ['email', formatEmail],
                     'phone',
                     ['address', formatAddress]
-                ], function(i, attr) {
+                ];
+
+                var cells = $('td', row);
+
+                $.each(fields, function(i, attr) {
                     if ($.isArray(attr)) {
-                        $('<td>').html(attr[1](data[attr[0]])).appendTo(row);
+                        $(cells[i]).html(attr[1](data[attr[0]]));
                     } else {
-                        $('<td>').text(data[attr]).appendTo(row);
+                        $(cells[i]).text(data[attr]);
                     }
                 });
+            }
 
-                $('<td>').html('<a class="delete" href="javascript:void(0);">Delete</a>').appendTo(row);
+            function addCellsToRow(row) {
+                var columnCount = table.find('tr:first-child > th').length;
+                while ($('td', row).length < columnCount) {
+                    $('<td>').appendTo(row);
+                }
+            }
+
+            function addButtonsToRow(row) {
+                var lastCell = $('<td>').appendTo(row);
+                var editButton = $('<a>')
+                    .addClass('edit btn btn-default')
+                    .html('<span class="glyphicon glyphicon-edit"></span>')
+                    .appendTo(lastCell);
+
+                var deleteButton = $('<a>')
+                    .addClass('delete btn btn-default')
+                    .html('<span class="glyphicon glyphicon-trash"></span>')
+                    .appendTo(lastCell);
+            }
+
+            function addRowToTable(data) {
+                var row = $('<tr>').attr('data-id', data.id).appendTo(table);
+
+                addCellsToRow(row);
+                updateRow(row, data);
+                addButtonsToRow(row);
             }
 
             function displayNotice(message) {
@@ -83,12 +119,28 @@
                 }, 3000);
             }
 
-            function clearForm() {
-                $('input[type="text"], textarea', form).val('');
+            function clearForms() {
+                $('input[type="text"], textarea').val('');
+            }
+
+            function hideModals() {
+                $('.modal').hide();
+            }
+
+            function updateFormFromRow(form, row) {
+                var id = row.attr('data-id');
+                form.attr('action', '/contacts/' + id);
+
+                $('input[name="firstName"]', form).val($('td:nth-child(1)', row).text());
+                $('input[name="lastName"]', form).val($('td:nth-child(2)', row).text());
+                $('input[name="email"]', form).val($('td:nth-child(3)', row).text());
+                $('input[name="phone"]', form).val($('td:nth-child(4)', row).text());
+                $('textarea[name="address"]', form).val($('td:nth-child(5)', row).text());
             }
 
             $(document).ajaxStart(function() {
                 body.addClass('loading');
+                hideModals();
             });
 
             $(document).ajaxComplete(function() {
@@ -101,10 +153,11 @@
                 });
             });
 
-            form.submit(function(e) {
+            $('form').submit(function(e) {
                 e.preventDefault();
 
-                var route  = form.attr('action'),
+                var form   = $(this),
+                    route  = form.attr('action'),
                     method = form.attr('method') || 'POST',
                     data   = form.serializeArray();
 
@@ -114,13 +167,32 @@
                     data: data,
                     dataType: 'json',
                     success: function(data) {
-                        addRowToTable(data);
-                        displayNotice('Added "' + data.firstName + '" to contacts!');
-                    },
-                    complete: function() {
-                        clearForm();
+                        var id  = data.id,
+                            row = table.find('tr[data-id="' + id + '"]');
+
+                        if (row.length > 0) {
+                            updateRow(row, data);
+                            displayNotice('Updated "' + data.firstName + '"!');
+
+                        } else {
+                            addRowToTable(data);
+                            displayNotice('Added "' + data.firstName + '" to contacts!');
+                        }
+
+                        clearForms();
                     }
                 });
+            });
+
+            $(document).on('click', 'a.edit', function() {
+                var row    = $(this).closest('tr'),
+                    id     = row.attr('data-id'),
+                    dialog = $('#edit-page'),
+                    form   = $('form', dialog);
+
+                updateFormFromRow(form, row);
+
+                dialog.show();
             });
 
             $(document).on('click', 'a.delete', function() {
@@ -140,6 +212,11 @@
                         displayNotice('Removed "' + name + '" from contacts!');
                     }
                 });
+            });
+
+            $(document).on('click', 'button.cancel', function(e) {
+                e.preventDefault();
+                hideModals();
             });
         });
     --></script>
@@ -163,8 +240,23 @@
             </p>
         </div>
 
-        <div class="row">
-            <div class="col-lg-6">
+        <div id="index-page" class="row">
+            <div id="list-section" class="col-lg-6">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>First name</th>
+                            <th>Last name</th>
+                            <th>E-mail</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div id="entry-section" class="col-lg-6">
                 <form action="/contacts" method="POST">
                     <fieldset>
                         <legend>Add a new contact</legend>
@@ -198,20 +290,49 @@
                     </fieldset>
                 </form>
             </div>
+        </div>
 
-            <div class="col-lg-6">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>First name</th>
-                            <th>Last name</th>
-                            <th>E-mail</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                </table>
+        <div id="edit-page" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form>
+                        <div class="modal-header">
+                            <h1>Edit</h1>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="firstName">First name</label>
+                                <input class="form-control" type="text" name="firstName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Last name</label>
+                                <input class="form-control" type="text" name="lastName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">E-mail address</label>
+                                <input class="form-control" type="text" name="email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone number</label>
+                                <input class="form-control" type="text" name="phone" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea class="form-control" name="address"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="cancel btn btn-default">Cancel</button>
+                            <input type="submit" class="btn btn-primary" value="Save Changes" />
+                        </div>
+                    </form>
+               </div>
             </div>
         </div>
     </div>
