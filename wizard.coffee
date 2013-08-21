@@ -136,6 +136,9 @@ XMLHttpRequest::getAllResponseHeaders = ->
     'content-type: application/json; charset=UTF-8'
   ].join('\n')
 
+  # This would give us normal behavior.
+  # _getAllResponseHeaders.apply(this, arguments)
+
 # ----- Helpers -----
 
 merge = (left, right) ->
@@ -161,13 +164,15 @@ parseData = (encodedData) ->
   data
 
 clobberProperty = (object, propertyName, value) ->
-  # Not sure if ANY browsers will allow this, but it's worth a shot.
-  object[propertyName] = value
+  # This is the standardized API as of JavaScript 1.8.1.
+  # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters
+  if Object.defineProperty?
+    Object.defineProperty(object, propertyName, { get: -> value })
 
-  # The latest versions of Chrome and Firefox both seem to support this
-  if object.__defineGetter__?
+  # Older versions of some browsers might support this legacy interface.
+  else if object.__defineGetter__?
     object.__defineGetter__(propertyName, -> value)
 
-  # According to MDN, this will be the new hotness... at some point?
-  # Neither Chrome nor Firefox seems to support it right now, though.
-  # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects#Defining_getters_and_setters
+  # Not sure if ANY browsers will allow this, but it's worth a shot.
+  else
+    object[propertyName] = value

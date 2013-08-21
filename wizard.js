@@ -214,11 +214,18 @@
   };
 
   clobberProperty = function(object, propertyName, value) {
-    object[propertyName] = value;
-    if (object.__defineGetter__ != null) {
+    if (Object.defineProperty != null) {
+      return Object.defineProperty(object, propertyName, {
+        get: function() {
+          return value;
+        }
+      });
+    } else if (object.__defineGetter__ != null) {
       return object.__defineGetter__(propertyName, function() {
         return value;
       });
+    } else {
+      return object[propertyName] = value;
     }
   };
 
