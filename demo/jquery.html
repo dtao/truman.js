@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wizard.js example using jQuery</title>
+    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.css" />
+    <script type="text/javascript" src="../wizard.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.1.js"></script>
+
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body.loading:after {
+            display: block;
+            position: fixed;
+            content: "";
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            width: 100%;
+            background: #fff url(loading.gif) no-repeat center;
+            opacity: 0.75;
+            filter: alpha(opacity=75);
+            z-index: 1;
+        }
+    </style>
+
+    <script><!--
+        $(document).ready(function() {
+            var body   = $('body'),
+                header = $('.page-header'),
+                form   = $('form'),
+                table  = $('table');
+
+            function addRowToTable(data) {
+                var row = $('<tr>').appendTo(table);
+                $.each(['firstName', 'lastName', 'email', 'phone', 'address'], function(i, attr) {
+                    $('<td>').text(data[attr]).appendTo(row);
+                });
+            }
+
+            function displayNotice(message) {
+                var notice = $('<div>')
+                    .addClass('alert alert-info')
+                    .text(message)
+                    .insertAfter(header);
+
+                setTimeout(function() {
+                    notice.slideUp(function() { notice.remove(); });
+                }, 3000);
+            }
+
+            function clearForm() {
+                $('input[type="text"], textarea', form).val('');
+            }
+
+            $(document).ajaxStart(function() {
+                body.addClass('loading');
+            });
+
+            $(document).ajaxComplete(function() {
+                body.removeClass('loading');
+            });
+
+            $.getJSON('/contacts', function(data) {
+                $.each(data, function(i, contact) {
+                    addRowToTable(contact);
+                });
+            });
+
+            form.submit(function(e) {
+                e.preventDefault();
+
+                var route  = form.attr('action'),
+                    method = form.attr('method') || 'POST',
+                    data   = form.serializeArray();
+
+                $.ajax({
+                    url: route,
+                    type: method,
+                    data: data,
+                    dataType: 'json',
+                    success: function(data) {
+                        addRowToTable(data);
+                        displayNotice('Added contact ' + data.id + '!');
+                    },
+                    complete: function() {
+                        clearForm();
+                    }
+                });
+            });
+        });
+    --></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>jQuery Example</h1>
+
+            <p class="lead">
+                This page uses <strong>Wizard.js</strong> to simulate a backend so that jQuery code
+                like <code>$.ajax</code>, <code>$.getJSON</code>, etc. will all just work.
+            </p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <form action="/contacts" method="POST">
+                    <fieldset>
+                        <legend>Add a new contact</legend>
+
+                        <div class="form-group">
+                            <label for="firstName">First name</label>
+                            <input class="form-control" type="text" name="firstName" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName">Last name</label>
+                            <input class="form-control" type="text" name="lastName" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">E-mail address</label>
+                            <input class="form-control" type="text" name="email" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone number</label>
+                            <input class="form-control" type="text" name="phone" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea class="form-control" name="address"></textarea>
+                        </div>
+
+                        <input class="btn btn-primary" type="submit" value="Add" />
+                    </fieldset>
+                </form>
+            </div>
+
+            <div class="col-lg-6">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>First name</th>
+                            <th>Last name</th>
+                            <th>E-mail</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
