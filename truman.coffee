@@ -100,11 +100,11 @@ afterDelay = (delay, callback) ->
 
 # ----- The teensy weensy little API we'll expose
 
-window.Wizard =
+window.Truman =
   delay: 1000
 
 getDelay = ->
-  Wizard.delay
+  Truman.delay
 
 # ----- The part where we screw up XMLHttpRequest -----
 

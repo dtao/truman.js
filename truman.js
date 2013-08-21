@@ -141,12 +141,12 @@
     return setTimeout(callback, delay);
   };
 
-  window.Wizard = {
+  window.Truman = {
     delay: 1000
   };
 
   getDelay = function() {
-    return Wizard.delay;
+    return Truman.delay;
   };
 
   _open = XMLHttpRequest.prototype.open;

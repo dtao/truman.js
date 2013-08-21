@@ -1,4 +1,4 @@
-Wizard.js
+Truman.js
 =========
 
 All Smoke & Mirrors
@@ -11,7 +11,7 @@ developers), not to mention that it would just be some crappy throwaway code. Yo
 API abstraction layer client-side, with a dummy placeholder implementation to start; but that would
 make your application more complex than it needs to be.
 
-The idea behind **Wizard.js** is that it lets you build your application the way you would if the
+The idea behind **Truman.js** is that it lets you build your application the way you would if the
 backend already existed--using the browser's native `XMLHttpRequest` object, or any library that
 wraps it (e.g., jQuery, Prototype)--*without* an unnecessary abstraction layer. It assumes that
 you'll be interacting with a RESTful API and provides CRUD operations that persist data to
@@ -26,7 +26,7 @@ involved in making this magic happen.)
 Conventions
 -----------
 
-By convention\*\*, Wizard.js assumes that you're going to interact with a RESTful API. This implies
+By convention\*\*, Truman.js assumes that you're going to interact with a RESTful API. This implies
 the following endpoints:
 
     GET /resources
@@ -56,8 +56,8 @@ just deleted.
 JavaScript Usage
 ----------------
 
-For now, Wizard.js doesn't offer much in the way of a programmatic API. There's one little option:
-you can set the `Wizard.delay` property to the number of milliseconds you'd like for your fake AJAX
+For now, Truman.js doesn't offer much in the way of a programmatic API. There's one little option:
+you can set the `Truman.delay` property to the number of milliseconds you'd like for your fake AJAX
 requests to take. (The default is 1000, or 1 second.)
 
 ### Footnotes
