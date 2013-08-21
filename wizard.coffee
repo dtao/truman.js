@@ -2,18 +2,18 @@
 
 api =
   index: (tableName, callback) ->
-    afterDelay 1000, ->
+    afterDelay getDelay(), ->
       table = getTable(tableName)
       callback(compact(table.rows))
 
   get: (tableName, recordId, callback) ->
-    afterDelay 1000, ->
+    afterDelay getDelay(), ->
       record = getRecord(tableName, recordId)
       callback(record)
 
   update: (tableName, recordId, data, callback) ->
     data = parseData(data) if typeof data == 'string'
-    afterDelay 1000, ->
+    afterDelay getDelay(), ->
       table = getTable(tableName)
       record = table.rows[recordId - 1] || {}
       for attribute of data
@@ -23,12 +23,12 @@ api =
 
   create: (tableName, data, callback) ->
     data = parseData(data) if typeof data == 'string'
-    afterDelay 1000, ->
+    afterDelay getDelay(), ->
       record = createRecord(tableName, data)
       callback(record)
 
   delete: (tableName, recordId, callback) ->
-    afterDelay 1000, ->
+    afterDelay getDelay(), ->
       table = getTable(tableName)
       record = table.rows[recordId - 1]
       table.rows[recordId - 1] = undefined
@@ -97,6 +97,14 @@ createRecord = (tableName, data) ->
 
 afterDelay = (delay, callback) ->
   setTimeout(callback, delay)
+
+# ----- The teensy weensy little API we'll expose
+
+window.Wizard =
+  delay: 1000
+
+getDelay = ->
+  Wizard.delay
 
 # ----- The part where we screw up XMLHttpRequest -----
 

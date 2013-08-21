@@ -53,6 +53,13 @@ whatever you include in the request.
 Delete the "resources" row with an ID of 1. The response will include the row data of the record you
 just deleted.
 
+JavaScript Usage
+----------------
+
+For now, Wizard.js doesn't offer much in the way of a programmatic API. There's one little option:
+you can set the `Wizard.delay` property to the number of milliseconds you'd like for your fake AJAX
+requests to take. (The default is 1000, or 1 second.)
+
 ### Footnotes
 
 \* And frankly, even if you're sharing with other developers, it's *much* more convenient to be able
