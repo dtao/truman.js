@@ -247,7 +247,15 @@
     for (_i = 0, _len = parameters.length; _i < _len; _i++) {
       param = parameters[_i];
       _ref = param.split('='), key = _ref[0], value = _ref[1];
-      data[decodeURIComponent(key)] = decodeURIComponent(value).replace(/\+/g, ' ');
+      key = decodeURIComponent(key);
+      value = decodeURIComponent(value).replace(/\+/g, ' ');
+      if (!(key in data)) {
+        data[key] = value;
+      } else if (!(data[key] instanceof Array)) {
+        data[key] = [data[key], value];
+      } else {
+        data[key].push(value);
+      }
     }
     return data;
   };

@@ -123,6 +123,26 @@
           });
         });
       });
+      it('handles multiple values for a given field', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', '/examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          return xhr.send('values=foo&values=bar');
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            values: ['foo', 'bar']
+          });
+        });
+      });
       return xit('using FormData', function() {
         runs(function() {
           var formData, xhr;

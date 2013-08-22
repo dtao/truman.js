@@ -187,7 +187,14 @@ parseData = (encodedData) ->
   parameters = encodedData.split('&')
   for param in parameters
     [key, value] = param.split('=')
-    data[decodeURIComponent(key)] = decodeURIComponent(value).replace(/\+/g, ' ')
+    key = decodeURIComponent(key)
+    value = decodeURIComponent(value).replace(/\+/g, ' ')
+    if !(key of data)
+      data[key] = value
+    else if !(data[key] instanceof Array)
+      data[key] = [data[key], value]
+    else
+      data[key].push(value)
   data
 
 clobberProperty = (object, propertyName, value) ->
