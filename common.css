@@ -21,6 +21,12 @@ body.loading:after {
   z-index: 1;
 }
 
+.page-header h1 {
+  font-family: "Arial Black", Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: -3px;
+}
+
 /* See https://github.com/twbs/bootstrap/pull/9171 */
 @-webkit-viewport   { width: device-width; }
 @-moz-viewport      { width: device-width; }
