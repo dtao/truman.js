@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Truman.js Prototype Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="../lib/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="../common.css" />
+    <script type="text/javascript" src="../common.js"></script>
+    <link rel="stylesheet" type="text/css" href="prototype-demo.css" />
+    <script type="text/javascript" src="../truman.js"></script>
+    <script type="text/javascript" src="../lib/prototype.js"></script>
+    <script type="text/javascript" src="../lib/mustache.js"></script>
+    <script type="text/javascript" src="../lib/md5.js"></script>
+    <script type="text/javascript" src="prototype-demo.js"></script>
+</head>
+
+<body>
+    <!-- Fork me on GitHub! -->
+    <a href="https://github.com/dtao/truman.js">
+        <img style="position: absolute; top: 0; right: 0; border: 0;"
+             src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"
+             alt="Fork me on GitHub" />
+    </a>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Truman.js Prototype Example</h1>
+
+            <p class="lead">
+                This page uses <strong>Truman.js</strong> to intercept AJAX calls made with
+                Prototype (using <code>Ajax.Request</code>) and store data locally.
+            </p>
+        </div>
+
+        <div class="navbar navbar-default">
+            <ul class="nav navbar-nav">
+                <li><a href="../">Home</a></li>
+                <li><a href="../native">Native Example</a></li>
+                <li><a href="../jquery">jQuery Example</a></li>
+                <li class="active"><a href="../prototype">Prototype Example</a></li>
+            </ul>
+        </div>
+
+        <div id="toolbar" class="row">
+            <div class="btn-toolbar col-lg-12">
+                <p>
+                    <button id="add-contact" class="btn btn-primary">Add Contact</button>
+                    <button id="clear-contacts" class="btn btn-danger">Clear Contacts</button>
+                </p>
+            </div>
+        </div>
+
+        <div id="entry-dialog" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/contacts" method="POST">
+                        <div class="modal-header">
+                            <h1>Add a new contact</h1>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="firstName">First name</label>
+                                <input class="form-control" type="text" name="firstName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Last name</label>
+                                <input class="form-control" type="text" name="lastName" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">E-mail address</label>
+                                <input class="form-control" type="text" name="email" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone number</label>
+                                <input class="form-control" type="text" name="phone" />
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <div class="form-group">
+                                <button id="close-button" class="btn btn-default">Close</button>
+                                <input class="btn btn-primary" type="submit" value="Add" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="contact-list" class="row"></div>
+    </div>
+
+    <script type="text/html" id="contact-template">
+        <div class="col-sm-4 col-md-3">
+            <div class="thumbnail text-center">
+                <img src="{{src}}" alt="{{firstName}} {{lastName}}" style="height: 128px; width: 128px;">
+                <div class="caption">
+                    <h3>{{firstName}} {{lastName}}</h3>
+                    <p><a href="mailto:{{email}}">{{email}}</a></p>
+                </div>
+            </div>
+        </div>
+    </script>
+</body>
+
+</html>

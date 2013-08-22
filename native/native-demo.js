@@ -59,29 +59,14 @@
       return data.join('&');
     }
 
-    function getGravatarUrl(email) {
-      // Strip away leading/trailing whitespace
-      email = email.replace(/^\s*/, '').replace(/\s*$/, '');
-
-      // Convert to lowercase
-      email = email.toLowerCase();
-
-      // Compute MD5 hash
-      var hash = md5(email);
-
-      return '//www.gravatar.com/avatar/' + hash + '.jpg?s=50&d=identicon';
-    }
-
     function addContactToList(contact) {
-      var wrapper = document.createElement('DIV');
-
-      wrapper.innerHTML = Mustache.render(contactTemplate, {
+      var element = getElementFromTemplate('contact-template', {
         name: contact.firstName + ' ' + contact.lastName,
         email: contact.email,
         src: getGravatarUrl(contact.email)
       });
 
-      contactList.appendChild(wrapper.querySelector('li:first-child'));
+      contactList.appendChild(element);
     }
 
     contactForm.addEventListener('submit', function(e) {

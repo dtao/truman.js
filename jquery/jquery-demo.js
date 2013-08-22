@@ -33,9 +33,13 @@ $(document).ready(function() {
 
   function addCellsToRow(row) {
     var columnCount = table.find('tr:first-child > th').length;
-    while ($('td', row).length < columnCount) {
-      $('<td>').appendTo(row);
-    }
+
+    $('<td>').appendTo(row);                                 // First name
+    $('<td>').addClass('hidden-xs').appendTo(row); // Last name
+    $('<td>').appendTo(row);                                 // E-mail address
+    $('<td>').addClass('hidden-xs').appendTo(row); // Phone number
+    $('<td>').addClass('hidden-xs').appendTo(row); // Address
+    $('<td>').addClass('hidden-xs').appendTo(row); // Edit & delete
   }
 
   function addButtonsToRow(row) {

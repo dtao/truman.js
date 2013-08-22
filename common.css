@@ -27,3 +27,10 @@ body.loading:after {
 @-ms-viewport       { width: device-width; }
 @-o-viewport        { width: device-width; }
 @viewport           { width: device-width; }
+
+/* Fix for weird Bootstrap styling issue */
+@media all and (max-width: 767px) {
+  .navbar-nav {
+    margin: 0;
+  }
+}

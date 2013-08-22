@@ -4,6 +4,12 @@
   margin: auto;
 }
 
+tr td:last-child {
+  background-color: #ddd;
+  text-align: center;
+  vertical-align: middle;
+}
+
 tr td:last-child a {
   visibility: hidden;
 }
