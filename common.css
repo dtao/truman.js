@@ -15,7 +15,7 @@ body.loading:after {
   right: 0;
   height: 100%;
   width: 100%;
-  background: #fff url(../loading.gif) no-repeat center;
+  background: #fff url(loading.gif) no-repeat center;
   opacity: 0.75;
   filter: alpha(opacity=75);
   z-index: 1;
