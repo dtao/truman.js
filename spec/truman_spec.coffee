@@ -13,6 +13,13 @@ describe 'Truman', ->
         expect(actualData).toEqual(data)
         true
 
+  it 'supports setting request headers', ->
+    activity = ->
+      xhr = new XMLHttpRequest()
+      xhr.open('GET', '/examples')
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+    expect(activity).not.toThrow()
+
   describe 'intercepts handlers', ->
     handler = null
 

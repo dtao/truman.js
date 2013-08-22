@@ -147,6 +147,14 @@ XMLHttpRequest::addEventListener = (name, listener) ->
 
   _addEventListener.apply(this, arguments)
 
+_setRequestHeader = XMLHttpRequest::setRequestHeader
+XMLHttpRequest::setRequestHeader = ->
+  try
+    _setRequestHeader.apply(this, arguments)
+  catch e
+    # If this throws an exception, it really isn't a big deal since we're not making any actual
+    # network calls anyway.
+
 _getAllResponseHeaders = XMLHttpRequest::getAllResponseHeaders
 XMLHttpRequest::getAllResponseHeaders = ->
   [

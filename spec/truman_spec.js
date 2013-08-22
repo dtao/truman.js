@@ -16,6 +16,16 @@
         }
       });
     });
+    it('supports setting request headers', function() {
+      var activity;
+      activity = function() {
+        var xhr;
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', '/examples');
+        return xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      };
+      return expect(activity).not.toThrow();
+    });
     describe('intercepts handlers', function() {
       var createGetRequest, handler, prepareAsyncTest;
       handler = null;
