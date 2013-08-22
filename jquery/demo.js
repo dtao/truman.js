@@ -4,11 +4,11 @@ $(document).ready(function() {
     table   = $('table');
 
   function formatEmail(email) {
-    return '<a href="mailto:' + email + '">' + email + '</a>';
+    return email ? ('<a href="mailto:' + email + '">' + email + '</a>') : '';
   }
 
   function formatAddress(address) {
-    return address.replace(/\n/g, '<br />');
+    return address ? address.replace(/\n/g, '<br />') : '';
   }
 
   function updateRow(row, data) {
@@ -143,7 +143,7 @@ $(document).ready(function() {
   $(document).on('click', 'a.edit', function() {
     var row  = $(this).closest('tr'),
       id   = row.attr('data-id'),
-      dialog = $('#edit-page'),
+      dialog = $('#edit-dialog'),
       form   = $('form', dialog);
 
     updateFormFromRow(form, row);
