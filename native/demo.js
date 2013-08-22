@@ -11,35 +11,49 @@
       xhr.open('GET', url);
 
       xhr.addEventListener('load', function() {
+        document.body.removeAttribute('class');
         var data = JSON.parse(xhr.responseText);
         callback(data);
       });
 
+      document.body.className = 'loading';
       xhr.send();
     }
 
-    function getParameterForField(field) {
-      var name  = field.getAttribute('name'),
-          value = field.value;
+    function postAjax(form, callback) {
+      var url = form.getAttribute('action'),
+          xhr = new XMLHttpRequest();
 
+      xhr.open('POST', url);
+
+      xhr.addEventListener('load', function() {
+        document.body.removeAttribute('class');
+        var data = JSON.parse(xhr.responseText);
+        callback(data);
+      });
+
+      document.body.className = 'loading';
+      xhr.send(getDataFromForm(form));
+    }
+
+    function getParameter(name, value) {
       return encodeURIComponent(name) + '=' + encodeURIComponent(value);
     }
 
     function getDataFromForm(form) {
-      var fieldSelectors = [
-        'input[type="text"]',
-        'input[type="password"]',
-        'input[type="checkbox"]',
-        'input[type="radio"]',
-        'select',
-        'textarea'
-      ];
+      var fullName  = form.querySelector('input[name="name"]').value,
+          separator = fullName.indexOf(' '),
+          email     = form.querySelector('input[name="email"]').value;
 
-      var fields = form.querySelectorAll(fieldSelectors.join(', '));
+      var fields = {
+        firstName: fullName.substring(0, separator),
+        lastName: fullName.substring(separator + 1),
+        email: email
+      };
 
       var data = [];
-      for (var i = 0; i < fields.length; ++i) {
-        data.push(getParameterForField(fields[i]));
+      for (var field in fields) {
+        data.push(getParameter(field, fields[field]));
       }
 
       return data.join('&');
@@ -58,25 +72,11 @@
       return '//www.gravatar.com/avatar/' + hash + '.jpg?s=50&d=identicon';
     }
 
-    function postAjax(form, callback) {
-      var url = form.getAttribute('action'),
-          xhr = new XMLHttpRequest();
-
-      xhr.open('POST', url);
-
-      xhr.addEventListener('load', function() {
-        var data = JSON.parse(xhr.responseText);
-        callback(data);
-      });
-
-      xhr.send(getDataFromForm(form));
-    }
-
     function addContactToList(contact) {
       var wrapper = document.createElement('DIV');
 
       wrapper.innerHTML = Mustache.render(contactTemplate, {
-        name: contact.name,
+        name: contact.firstName + ' ' + contact.lastName,
         email: contact.email,
         src: getGravatarUrl(contact.email)
       });
