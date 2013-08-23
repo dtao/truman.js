@@ -11,8 +11,8 @@ api =
       record = getRecord(tableName, recordId)
       callback(record)
 
-  update: (tableName, recordId, data, callback) ->
-    data = parseData(data) if typeof data == 'string'
+  update: (tableName, recordId, data, contentType, callback) ->
+    data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
       table = getTable(tableName)
       record = table.rows[recordId - 1] || {}
@@ -21,8 +21,8 @@ api =
       saveTable(table)
       callback(record)
 
-  create: (tableName, data, callback) ->
-    data = parseData(data) if typeof data == 'string'
+  create: (tableName, data, contentType, callback) ->
+    data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
       record = createRecord(tableName, data)
       callback(record)
@@ -45,10 +45,10 @@ class Route
     @tableName = parts[0]
     @recordId = parts[1] if parts.length > 1
 
-  call: (data, callback) ->
+  call: (data, contentType, callback) ->
     switch @method
       when 'GET' then @get(callback)
-      when 'POST' then @post(data, callback)
+      when 'POST' then @post(data, contentType, callback)
       when 'DELETE' then @delete(callback)
 
   get: (callback) ->
@@ -58,12 +58,12 @@ class Route
     else
       api.index(@tableName, callback)
 
-  post: (data, callback) ->
+  post: (data, contentType, callback) ->
     if @recordId
-      api.update(@tableName, @recordId, data, callback)
+      api.update(@tableName, @recordId, data, contentType, callback)
 
     else
-      api.create(@tableName, data, callback)
+      api.create(@tableName, data, contentType, callback)
 
   delete: (callback) ->
     api.delete(@tableName, @recordId, callback)
@@ -117,13 +117,14 @@ getDelay = ->
 _open = XMLHttpRequest::open
 XMLHttpRequest::open = (method, url) ->
   @route = new Route(method, url)
+  @requestHeaders = {}
 
   # This would give us normal behavior.
   # _open.apply(this, arguments)
 
 _send = XMLHttpRequest::send
 XMLHttpRequest::send = (data) ->
-  @route.call data, (result) =>
+  @route.call data, @requestHeaders['content-type'], (result) =>
     clobberProperty(this, 'status', 200)
     clobberProperty(this, 'readyState', 4)
     clobberProperty(this, 'responseText', JSON.stringify(result))
@@ -148,8 +149,9 @@ XMLHttpRequest::addEventListener = (name, listener) ->
   _addEventListener.apply(this, arguments)
 
 _setRequestHeader = XMLHttpRequest::setRequestHeader
-XMLHttpRequest::setRequestHeader = ->
+XMLHttpRequest::setRequestHeader = (name, value) ->
   try
+    @requestHeaders[name.toLowerCase()] = value
     _setRequestHeader.apply(this, arguments)
   catch e
     # If this throws an exception, it really isn't a big deal since we're not making any actual
@@ -182,7 +184,9 @@ compact = (array) ->
     compacted.push(value) unless !value? or value == ''
   compacted
 
-parseData = (encodedData) ->
+parseData = (encodedData, contentType) ->
+  return JSON.parse(encodedData) if contentType == 'application/json'
+
   data = {}
   parameters = encodedData.split('&')
   for param in parameters

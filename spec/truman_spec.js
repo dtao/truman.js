@@ -123,6 +123,28 @@
           });
         });
       });
+      it('using JSON-encoded data', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', 'examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          xhr.setRequestHeader('Content-type', 'application/json');
+          return xhr.send('{ "title": "Example Title", "content": "Example Content" }');
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            title: 'Example Title',
+            content: 'Example Content'
+          });
+        });
+      });
       it('handles multiple values for a given field', function() {
         runs(function() {
           var xhr;

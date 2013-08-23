@@ -17,9 +17,9 @@
         return callback(record);
       });
     },
-    update: function(tableName, recordId, data, callback) {
+    update: function(tableName, recordId, data, contentType, callback) {
       if (typeof data === 'string') {
-        data = parseData(data);
+        data = parseData(data, contentType);
       }
       return afterDelay(getDelay(), function() {
         var attribute, record, table;
@@ -32,9 +32,9 @@
         return callback(record);
       });
     },
-    create: function(tableName, data, callback) {
+    create: function(tableName, data, contentType, callback) {
       if (typeof data === 'string') {
-        data = parseData(data);
+        data = parseData(data, contentType);
       }
       return afterDelay(getDelay(), function() {
         var record;
@@ -66,12 +66,12 @@
       }
     }
 
-    Route.prototype.call = function(data, callback) {
+    Route.prototype.call = function(data, contentType, callback) {
       switch (this.method) {
         case 'GET':
           return this.get(callback);
         case 'POST':
-          return this.post(data, callback);
+          return this.post(data, contentType, callback);
         case 'DELETE':
           return this["delete"](callback);
       }
@@ -85,11 +85,11 @@
       }
     };
 
-    Route.prototype.post = function(data, callback) {
+    Route.prototype.post = function(data, contentType, callback) {
       if (this.recordId) {
-        return api.update(this.tableName, this.recordId, data, callback);
+        return api.update(this.tableName, this.recordId, data, contentType, callback);
       } else {
-        return api.create(this.tableName, data, callback);
+        return api.create(this.tableName, data, contentType, callback);
       }
     };
 
@@ -159,14 +159,15 @@
   _open = XMLHttpRequest.prototype.open;
 
   XMLHttpRequest.prototype.open = function(method, url) {
-    return this.route = new Route(method, url);
+    this.route = new Route(method, url);
+    return this.requestHeaders = {};
   };
 
   _send = XMLHttpRequest.prototype.send;
 
   XMLHttpRequest.prototype.send = function(data) {
     var _this = this;
-    return this.route.call(data, function(result) {
+    return this.route.call(data, this.requestHeaders['content-type'], function(result) {
       var handler, listener, listeners, _i, _len, _results;
       clobberProperty(_this, 'status', 200);
       clobberProperty(_this, 'readyState', 4);
@@ -202,8 +203,9 @@
 
   _setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
 
-  XMLHttpRequest.prototype.setRequestHeader = function() {
+  XMLHttpRequest.prototype.setRequestHeader = function(name, value) {
     try {
+      this.requestHeaders[name.toLowerCase()] = value;
       return _setRequestHeader.apply(this, arguments);
     } catch (e) {
 
@@ -240,8 +242,11 @@
     return compacted;
   };
 
-  parseData = function(encodedData) {
+  parseData = function(encodedData, contentType) {
     var data, key, param, parameters, value, _i, _len, _ref;
+    if (contentType === 'application/json') {
+      return JSON.parse(encodedData);
+    }
     data = {};
     parameters = encodedData.split('&');
     for (_i = 0, _len = parameters.length; _i < _len; _i++) {

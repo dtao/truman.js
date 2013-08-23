@@ -96,6 +96,24 @@ describe 'Truman', ->
           title: 'Example Title'
           content: 'Example Content'
 
+    it 'using JSON-encoded data', ->
+      runs ->
+        xhr = new XMLHttpRequest()
+        xhr.open('POST', 'examples')
+        xhr.addEventListener 'load', ->
+          handler(xhr.responseText)
+        xhr.setRequestHeader('Content-type', 'application/json')
+        xhr.send('{ "title": "Example Title", "content": "Example Content" }');
+
+      waitsFor ->
+        handler.callCount > 0
+
+      runs ->
+        expect(handler).toHaveBeenCalledWithJson
+          id: 1
+          title: 'Example Title'
+          content: 'Example Content'
+
     it 'handles multiple values for a given field', ->
       runs ->
         xhr = new XMLHttpRequest()
