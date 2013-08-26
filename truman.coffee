@@ -1,38 +1,37 @@
 # ----- Our cheapo little REST interface -----
 
 api =
-  index: (tableName, callback) ->
+  index: (tableName, options) ->
+    options ?= {}
+    callback = options.callback || ->
+
     afterDelay getDelay(), ->
-      table = getTable(tableName)
-      callback(compact(table.rows))
+      rows = new Table(tableName).rows()
+      if options.foreignTableName?
+        foreignKeyField = singularize(options.foreignTableName) + '_id'
+        rows = filter rows, (row) ->
+          String(row[foreignKeyField]) == String(options.foreignKey)
+      callback(rows)
 
   get: (tableName, recordId, callback) ->
     afterDelay getDelay(), ->
-      record = getRecord(tableName, recordId)
-      callback(record)
+      callback(new Table(tableName).get(recordId))
 
   update: (tableName, recordId, data, contentType, callback) ->
     data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
-      table = getTable(tableName)
-      record = table.rows[recordId - 1] || {}
-      for attribute of data
-        record[attribute] = data[attribute]
-      saveTable(table)
-      callback(record)
+      callback(new Table(tableName).update(recordId, data))
 
   create: (tableName, data, contentType, callback) ->
     data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
-      record = createRecord(tableName, data)
-      callback(record)
+      callback(new Table(tableName).insert(data))
 
   delete: (tableName, recordId, callback) ->
     afterDelay getDelay(), ->
-      table = getTable(tableName)
-      record = table.rows[recordId - 1]
-      table.rows[recordId - 1] = undefined
-      saveTable(table)
+      table = new Table(tableName)
+      record = table.get(recordId)
+      table.delete(recordId)
       callback(record)
 
 # ----- Equally crappy routing logic -----
@@ -42,8 +41,9 @@ class Route
     @method = method.toUpperCase()
 
     parts = compact(url.split('/'))
-    @tableName = parts[0]
+    @tableName = if parts.length > 2 then parts[2] else parts[0]
     @recordId = parts[1] if parts.length > 1
+    @foreignTableName = parts[0] if parts.length > 2
 
   call: (data, contentType, callback) ->
     switch @method
@@ -52,11 +52,18 @@ class Route
       when 'DELETE' then @delete(callback)
 
   get: (callback) ->
-    if @recordId
+    if @foreignTableName
+      api.index @tableName,
+        foreignTableName: @foreignTableName
+        foreignKey: @recordId
+        callback: callback
+
+    else if @recordId
       api.get(@tableName, @recordId, callback)
 
     else
-      api.index(@tableName, callback)
+      api.index @tableName,
+        callback: callback
 
   post: (data, contentType, callback) ->
     if @recordId
@@ -68,46 +75,77 @@ class Route
   delete: (callback) ->
     api.delete(@tableName, @recordId, callback)
 
-# ----- The actual CRUD implementation -----
+# ----- The actual CRUD implementation based on localStorage -----
 
-prefixTableName = (name) ->
-  "__truman__#{name}"
+class Table
+  constructor: (@name) ->
+    @data = JSON.parse(localStorage[@_prefixedName()] || '{}')
+    if !@data.name?
+      @data.name = @name
+      @data.rows = []
+      @save()
 
-getTable = (name) ->
-  table = JSON.parse(localStorage[prefixTableName(name)] || '{}')
-  if !table.name?
-    table.name = name
-    table.rows = []
-    saveTable(table)
-  table
+  name: ->
+    @data.name
 
-getRecord = (tableName, recordId) ->
-  table = getTable(tableName)
-  table.rows[recordId - 1]
+  rows: ->
+    @data.rows
 
-getNextId = (table) ->
-  table.rows.length + 1
+  get: (id) ->
+    @data.rows[id + 1]
 
-saveTable = (table) ->
-  localStorage[prefixTableName(table.name)] = JSON.stringify(table)
+  insert: (data) ->
+    record = @_addRecord(data)
+    @save()
+    record
 
-createRecord = (tableName, data) ->
-  table = getTable(tableName)
-  record = merge(data, { id: getNextId(table) })
-  table.rows.push(record)
-  saveTable(table)
-  record
+  insertMany: (data) ->
+    records = for record in data
+      @_addRecord(record)
+    @save()
+    records
 
-afterDelay = (delay, callback) ->
-  setTimeout(callback, delay)
+  update: (id, data) ->
+    record = @_updateRecord(id, data)
+    @save()
+    record
+
+  updateMany: (data) ->
+    records = for recordId of data
+      @_updateRecord(recordId, data[recordId])
+    @save()
+    records
+
+  delete: (id) ->
+    @data.rows[id + 1] = undefined
+
+  save: ->
+    localStorage[@_prefixedName()] = JSON.stringify(@data)
+
+  drop: ->
+    delete localStorage[@_prefixedName()]
+
+  _addRecord: (data) ->
+    record = merge(data, { id: @_getNextId() })
+    @data.rows.push(record)
+    record
+
+  _updateRecord: (id, data) ->
+    record = merge(@get(id), data)
+    @data.rows[id + 1] = record
+    record
+
+  _getNextId: ->
+    @data.rows.length + 1
+
+  _prefixedName: ->
+    "__truman__#{@name}"
 
 # ----- The teensy weensy little API we'll expose
 
 window.Truman =
+  Table: Table
   delay: 1000
-
-  dropTable: (name) ->
-    delete localStorage[prefixTableName(name)]
 
 getDelay = ->
   Truman.delay
@@ -170,6 +208,9 @@ XMLHttpRequest::getAllResponseHeaders = ->
 
 # ----- Helpers -----
 
+afterDelay = (delay, callback) ->
+  setTimeout(callback, delay)
+
 merge = (left, right) ->
   merged = {}
   for key of left
@@ -178,11 +219,26 @@ merge = (left, right) ->
     merged[key] = right[key]
   merged
 
-compact = (array) ->
-  compacted = []
+filter = (array, predicate) ->
+  filtered = []
   for value in array
-    compacted.push(value) unless !value? or value == ''
-  compacted
+    filtered.push(value) if predicate(value)
+  filtered
+
+compact = (array) ->
+  filter(array, (value) -> !!value)
+
+singularize = (word) ->
+  return word.substring(0, word.length - 3) + 'y' if endsWith(word, 'ies')
+  return word.substring(0, word.length - 2) if endsWith(word, 'es')
+  return word.substring(0, word.length - 1) if lastChar(word, 's')
+  return word
+
+lastChar = (word) ->
+  word.charAt(word.length - 1)
+
+endsWith = (word, suffix) ->
+  word.substring(word.length - suffix.length) == suffix
 
 parseData = (encodedData, contentType) ->
   return JSON.parse(encodedData) if contentType == 'application/json'

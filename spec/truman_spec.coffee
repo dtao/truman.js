@@ -4,7 +4,7 @@ describe 'Truman', ->
     Truman.delay = 0
 
     # This will make it easier to keep track of what's saved for each spec.
-    Truman.dropTable('examples')
+    new Truman.Table('examples').drop()
 
   beforeEach ->
     this.addMatchers
@@ -26,7 +26,7 @@ describe 'Truman', ->
     beforeEach ->
       handler = jasmine.createSpy()
 
-    prepareAsyncTest = (makeAjaxRequest) ->
+    runAsyncTest = (makeAjaxRequest) ->
       runs(makeAjaxRequest)
 
       expectation = ->
@@ -43,7 +43,7 @@ describe 'Truman', ->
       xhr
 
     it 'added with the onload method', ->
-      prepareAsyncTest ->
+      runAsyncTest ->
         xhr = createGetRequest()
         xhr.onload = ->
           if xhr.readyState == 4
@@ -51,7 +51,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with the onreadystatechange method', ->
-      prepareAsyncTest ->
+      runAsyncTest ->
         xhr = createGetRequest()
         xhr.onreadystatechange = ->
           if xhr.readyState == 4
@@ -59,7 +59,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with the onprogress method', ->
-      prepareAsyncTest ->
+      runAsyncTest ->
         xhr = createGetRequest()
         xhr.onprogress = ->
           if xhr.readyState == 4
@@ -67,7 +67,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with addEventListener("load")', ->
-      prepareAsyncTest ->
+      runAsyncTest ->
         xhr = createGetRequest()
         xhr.addEventListener 'load', ->
           handler(xhr.responseText)
@@ -114,24 +114,10 @@ describe 'Truman', ->
           title: 'Example Title'
           content: 'Example Content'
 
-    it 'handles multiple values for a given field', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/examples')
-        xhr.addEventListener 'load', ->
-          handler(xhr.responseText)
-        xhr.send('values=foo&values=bar')
-
-      waitsFor ->
-        handler.callCount > 0
-
-      runs ->
-        expect(handler).toHaveBeenCalledWithJson
-          id: 1
-          values: ['foo', 'bar']
-
     # Oh dear... this might not be possible at all!
     # http://stackoverflow.com/questions/7752188/formdata-appendkey-value-is-not-working
+    #
+    # Probably supporting this will require overriding window.FormData itself
     xit 'using FormData', ->
       runs ->
         xhr = new XMLHttpRequest()
@@ -151,3 +137,54 @@ describe 'Truman', ->
           id: 1
           title: 'Example Title'
           content: 'Example Content'
+
+    it 'handles multiple values for a given field', ->
+      runs ->
+        xhr = new XMLHttpRequest()
+        xhr.open('POST', '/examples')
+        xhr.addEventListener 'load', ->
+          handler(xhr.responseText)
+        xhr.send('values=foo&values=bar')
+
+      waitsFor ->
+        handler.callCount > 0
+
+      runs ->
+        expect(handler).toHaveBeenCalledWithJson
+          id: 1
+          values: ['foo', 'bar']
+
+  describe 'fetching records from subresource routes', ->
+    callback = null
+
+    beforeEach ->
+      new Truman.Table('categories').insertMany [
+        { name: 'Category 1' },
+        { name: 'Category 2' }
+      ]
+
+      new Truman.Table('examples').insertMany [
+        { category_id: 1, title: 'Example 1' },
+        { category_id: 2, title: 'Example 2' },
+        { category_id: 2, title: 'Example 3' }
+      ]
+
+      callback = jasmine.createSpy()
+
+    it 'fetches only the records with the matching foreign key', ->
+      runs ->
+        xhr = new XMLHttpRequest()
+        xhr.open('GET', '/categories/2/examples')
+        xhr.onprogress = ->
+          if xhr.readyState == 4
+            callback(xhr.responseText)
+        xhr.send()
+
+      waitsFor ->
+        callback.callCount > 0
+
+      runs ->
+        expect(callback).toHaveBeenCalledWithJson [
+          { id: 2, category_id: 2, title: 'Example 2' },
+          { id: 3, category_id: 2, title: 'Example 3' }
+        ]

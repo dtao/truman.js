@@ -4,7 +4,7 @@
   describe('Truman', function() {
     beforeEach(function() {
       Truman.delay = 0;
-      return Truman.dropTable('examples');
+      return new Truman.Table('examples').drop();
     });
     beforeEach(function() {
       return this.addMatchers({
@@ -27,12 +27,12 @@
       return expect(activity).not.toThrow();
     });
     describe('intercepts handlers', function() {
-      var createGetRequest, handler, prepareAsyncTest;
+      var createGetRequest, handler, runAsyncTest;
       handler = null;
       beforeEach(function() {
         return handler = jasmine.createSpy();
       });
-      prepareAsyncTest = function(makeAjaxRequest) {
+      runAsyncTest = function(makeAjaxRequest) {
         var expectation;
         runs(makeAjaxRequest);
         expectation = function() {
@@ -50,7 +50,7 @@
         return xhr;
       };
       it('added with the onload method', function() {
-        return prepareAsyncTest(function() {
+        return runAsyncTest(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onload = function() {
@@ -62,7 +62,7 @@
         });
       });
       it('added with the onreadystatechange method', function() {
-        return prepareAsyncTest(function() {
+        return runAsyncTest(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onreadystatechange = function() {
@@ -74,7 +74,7 @@
         });
       });
       it('added with the onprogress method', function() {
-        return prepareAsyncTest(function() {
+        return runAsyncTest(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onprogress = function() {
@@ -86,7 +86,7 @@
         });
       });
       return it('added with addEventListener("load")', function() {
-        return prepareAsyncTest(function() {
+        return runAsyncTest(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.addEventListener('load', function() {
@@ -96,7 +96,7 @@
         });
       });
     });
-    return describe('creates fake records when sending POST requests to "create"-like routes', function() {
+    describe('creates fake records when sending POST requests to "create"-like routes', function() {
       var handler;
       handler = null;
       beforeEach(function() {
@@ -145,27 +145,7 @@
           });
         });
       });
-      it('handles multiple values for a given field', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('POST', '/examples');
-          xhr.addEventListener('load', function() {
-            return handler(xhr.responseText);
-          });
-          return xhr.send('values=foo&values=bar');
-        });
-        waitsFor(function() {
-          return handler.callCount > 0;
-        });
-        return runs(function() {
-          return expect(handler).toHaveBeenCalledWithJson({
-            id: 1,
-            values: ['foo', 'bar']
-          });
-        });
-      });
-      return xit('using FormData', function() {
+      xit('using FormData', function() {
         runs(function() {
           var formData, xhr;
           xhr = new XMLHttpRequest();
@@ -187,6 +167,81 @@
             title: 'Example Title',
             content: 'Example Content'
           });
+        });
+      });
+      return it('handles multiple values for a given field', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', '/examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          return xhr.send('values=foo&values=bar');
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            values: ['foo', 'bar']
+          });
+        });
+      });
+    });
+    return describe('fetching records from subresource routes', function() {
+      var callback;
+      callback = null;
+      beforeEach(function() {
+        new Truman.Table('categories').insertMany([
+          {
+            name: 'Category 1'
+          }, {
+            name: 'Category 2'
+          }
+        ]);
+        new Truman.Table('examples').insertMany([
+          {
+            category_id: 1,
+            title: 'Example 1'
+          }, {
+            category_id: 2,
+            title: 'Example 2'
+          }, {
+            category_id: 2,
+            title: 'Example 3'
+          }
+        ]);
+        return callback = jasmine.createSpy();
+      });
+      return it('fetches only the records with the matching foreign key', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('GET', '/categories/2/examples');
+          xhr.onprogress = function() {
+            if (xhr.readyState === 4) {
+              return callback(xhr.responseText);
+            }
+          };
+          return xhr.send();
+        });
+        waitsFor(function() {
+          return callback.callCount > 0;
+        });
+        return runs(function() {
+          return expect(callback).toHaveBeenCalledWithJson([
+            {
+              id: 2,
+              category_id: 2,
+              title: 'Example 2'
+            }, {
+              id: 3,
+              category_id: 2,
+              title: 'Example 3'
+            }
+          ]);
         });
       });
     });
