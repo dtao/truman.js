@@ -22,9 +22,17 @@ api =
     afterDelay getDelay(), ->
       callback(new Table(tableName).update(recordId, data))
 
-  create: (tableName, data, contentType, callback) ->
+  create: (tableName, data, options) ->
+    options ?= {}
+    callback = options.callback || ->
+    contentType = options.contentType || ''
+
     data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
+      if options.foreignTableName?
+        foreignKeyField = singularize(options.foreignTableName) + '_id'
+        data = clone(data)
+        data[foreignKeyField] = Number(options.foreignKey)
       callback(new Table(tableName).insert(data))
 
   delete: (tableName, recordId, callback) ->
@@ -66,11 +74,20 @@ class Route
         callback: callback
 
   post: (data, contentType, callback) ->
-    if @recordId
+    if @foreignTableName
+      api.create @tableName, data,
+        foreignTableName: @foreignTableName
+        foreignKey: @recordId
+        contentType: contentType
+        callback: callback
+
+    else if @recordId
       api.update(@tableName, @recordId, data, contentType, callback)
 
     else
-      api.create(@tableName, data, contentType, callback)
+      api.create @tableName, data,
+        contentType: contentType
+        callback: callback
 
   delete: (callback) ->
     api.delete(@tableName, @recordId, callback)
@@ -219,6 +236,9 @@ merge = (left, right) ->
     merged[key] = right[key]
   merged
 
+clone = (object) ->
+  merge(object, {})
+
 filter = (array, predicate) ->
   filtered = []
   for value in array
@@ -229,16 +249,24 @@ compact = (array) ->
   filter(array, (value) -> !!value)
 
 singularize = (word) ->
-  return word.substring(0, word.length - 3) + 'y' if endsWith(word, 'ies')
-  return word.substring(0, word.length - 2) if endsWith(word, 'es')
-  return word.substring(0, word.length - 1) if lastChar(word, 's')
+  return chop(word, 3) + 'y' if endsWith(word, 'ies')
+  return chop(word, 2) if endsWith(word, 'es')
+  return chop(word, 1) if lastChar(word) == 's'
   return word
+
+pluralize = (word) ->
+  return chop(word, 1) + 'ies' if lastChar(word) == 'y'
+  return "#{word}es" if endsWith(word, 'es')
+  return "#{word}s"
 
 lastChar = (word) ->
   word.charAt(word.length - 1)
 
 endsWith = (word, suffix) ->
   word.substring(word.length - suffix.length) == suffix
+
+chop = (word, length) ->
+  word.substring(0, word.length - length)
 
 parseData = (encodedData, contentType) ->
   return JSON.parse(encodedData) if contentType == 'application/json'

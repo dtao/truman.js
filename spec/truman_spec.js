@@ -169,7 +169,7 @@
           });
         });
       });
-      return it('handles multiple values for a given field', function() {
+      it('handles multiple values for a given field', function() {
         runs(function() {
           var xhr;
           xhr = new XMLHttpRequest();
@@ -186,6 +186,27 @@
           return expect(handler).toHaveBeenCalledWithJson({
             id: 1,
             values: ['foo', 'bar']
+          });
+        });
+      });
+      return it('adds the approprate foreign key for nested routes', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('POST', '/categories/1/examples');
+          xhr.addEventListener('load', function() {
+            return handler(xhr.responseText);
+          });
+          return xhr.send('title=Nested%20route%20example');
+        });
+        waitsFor(function() {
+          return handler.callCount > 0;
+        });
+        return runs(function() {
+          return expect(handler).toHaveBeenCalledWithJson({
+            id: 1,
+            category_id: 1,
+            title: 'Nested route example'
           });
         });
       });

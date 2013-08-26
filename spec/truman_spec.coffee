@@ -154,6 +154,23 @@ describe 'Truman', ->
           id: 1
           values: ['foo', 'bar']
 
+    it 'adds the approprate foreign key for nested routes', ->
+      runs ->
+        xhr = new XMLHttpRequest()
+        xhr.open('POST', '/categories/1/examples')
+        xhr.addEventListener 'load', ->
+          handler(xhr.responseText)
+        xhr.send('title=Nested%20route%20example')
+
+      waitsFor ->
+        handler.callCount > 0
+
+      runs ->
+        expect(handler).toHaveBeenCalledWithJson
+          id: 1
+          category_id: 1
+          title: 'Nested route example'
+
   describe 'fetching records from subresource routes', ->
     callback = null
 
