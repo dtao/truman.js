@@ -4,7 +4,7 @@ describe 'Truman', ->
     Truman.delay = 0
 
     # This will make it easier to keep track of what's saved for each spec.
-    new Truman.Table('examples').drop()
+    Truman.Table('examples').drop()
 
   beforeEach ->
     this.addMatchers
@@ -175,12 +175,12 @@ describe 'Truman', ->
     callback = null
 
     beforeEach ->
-      new Truman.Table('categories').insertMany [
+      Truman.Table('categories').insertMany [
         { name: 'Category 1' },
         { name: 'Category 2' }
       ]
 
-      new Truman.Table('examples').insertMany [
+      Truman.Table('examples').insertMany [
         { category_id: 1, title: 'Example 1' },
         { category_id: 2, title: 'Example 2' },
         { category_id: 2, title: 'Example 3' }

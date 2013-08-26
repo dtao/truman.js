@@ -6,7 +6,7 @@ api =
     callback = options.callback || ->
 
     afterDelay getDelay(), ->
-      rows = new Table(tableName).rows()
+      rows = Table(tableName).rows()
       if options.foreignTableName?
         foreignKeyField = singularize(options.foreignTableName) + '_id'
         rows = filter rows, (row) ->
@@ -15,12 +15,12 @@ api =
 
   get: (tableName, recordId, callback) ->
     afterDelay getDelay(), ->
-      callback(new Table(tableName).get(recordId))
+      callback(Table(tableName).get(recordId))
 
   update: (tableName, recordId, data, contentType, callback) ->
     data = parseData(data, contentType) if typeof data == 'string'
     afterDelay getDelay(), ->
-      callback(new Table(tableName).update(recordId, data))
+      callback(Table(tableName).update(recordId, data))
 
   create: (tableName, data, options) ->
     options ?= {}
@@ -33,11 +33,11 @@ api =
         foreignKeyField = singularize(options.foreignTableName) + '_id'
         data = clone(data)
         data[foreignKeyField] = Number(options.foreignKey)
-      callback(new Table(tableName).insert(data))
+      callback(Table(tableName).insert(data))
 
   delete: (tableName, recordId, callback) ->
     afterDelay getDelay(), ->
-      table = new Table(tableName)
+      table = Table(tableName)
       record = table.get(recordId)
       table.delete(recordId)
       callback(record)
@@ -94,8 +94,18 @@ class Route
 
 # ----- The actual CRUD implementation based on localStorage -----
 
+DB =
+  getOrCreateTable: (name) ->
+    table = (DB.tables[name] ?= new Table(name))
+
+  tables: {}
+
 class Table
-  constructor: (@name) ->
+  constructor: (name) ->
+    if !(this instanceof Table)
+      return DB.getOrCreateTable(name)
+
+    @name = name
     @data = JSON.parse(localStorage[@_prefixedName()] || '{}')
     if !@data.name?
       @data.name = @name
@@ -140,6 +150,7 @@ class Table
     localStorage[@_prefixedName()] = JSON.stringify(@data)
 
   drop: ->
+    delete DB.tables[@name]
     delete localStorage[@_prefixedName()]
 
   _addRecord: (data) ->

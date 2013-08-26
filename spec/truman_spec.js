@@ -4,7 +4,7 @@
   describe('Truman', function() {
     beforeEach(function() {
       Truman.delay = 0;
-      return new Truman.Table('examples').drop();
+      return Truman.Table('examples').drop();
     });
     beforeEach(function() {
       return this.addMatchers({
@@ -215,14 +215,14 @@
       var callback;
       callback = null;
       beforeEach(function() {
-        new Truman.Table('categories').insertMany([
+        Truman.Table('categories').insertMany([
           {
             name: 'Category 1'
           }, {
             name: 'Category 2'
           }
         ]);
-        new Truman.Table('examples').insertMany([
+        Truman.Table('examples').insertMany([
           {
             category_id: 1,
             title: 'Example 1'
