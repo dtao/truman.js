@@ -2,6 +2,7 @@
 (function() {
 
   describe('Truman', function() {
+    var testAsyncResponse;
     beforeEach(function() {
       Truman.delay = 0;
       return Truman.dropTables();
@@ -16,6 +17,28 @@
         }
       });
     });
+    testAsyncResponse = function(method, route, options) {
+      var handler;
+      if (options == null) {
+        options = {};
+      }
+      handler = jasmine.createSpy();
+      runs(function() {
+        var xhr;
+        xhr = new XMLHttpRequest();
+        xhr.open(method, route);
+        xhr.addEventListener('load', function() {
+          return handler(xhr.responseText);
+        });
+        return xhr.send(options.requestData);
+      });
+      waitsFor(function() {
+        return handler.callCount > 0;
+      });
+      return runs(function() {
+        return expect(handler).toHaveBeenCalledWithJson(options.expectedJson);
+      });
+    };
     it('supports setting request headers', function() {
       var activity;
       activity = function() {
@@ -27,12 +50,12 @@
       return expect(activity).not.toThrow();
     });
     describe('intercepts handlers', function() {
-      var createGetRequest, handler, runAsyncTest;
+      var createGetRequest, handler, testHandlerInterception;
       handler = null;
       beforeEach(function() {
         return handler = jasmine.createSpy();
       });
-      runAsyncTest = function(makeAjaxRequest) {
+      testHandlerInterception = function(makeAjaxRequest) {
         var expectation;
         runs(makeAjaxRequest);
         expectation = function() {
@@ -50,7 +73,7 @@
         return xhr;
       };
       it('added with the onload method', function() {
-        return runAsyncTest(function() {
+        return testHandlerInterception(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onload = function() {
@@ -62,7 +85,7 @@
         });
       });
       it('added with the onreadystatechange method', function() {
-        return runAsyncTest(function() {
+        return testHandlerInterception(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onreadystatechange = function() {
@@ -74,7 +97,7 @@
         });
       });
       it('added with the onprogress method', function() {
-        return runAsyncTest(function() {
+        return testHandlerInterception(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.onprogress = function() {
@@ -86,7 +109,7 @@
         });
       });
       return it('added with addEventListener("load")', function() {
-        return runAsyncTest(function() {
+        return testHandlerInterception(function() {
           var xhr;
           xhr = createGetRequest();
           xhr.addEventListener('load', function() {
@@ -103,24 +126,13 @@
         return handler = jasmine.createSpy();
       });
       it('using form-encoded data', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('POST', '/examples');
-          xhr.addEventListener('load', function() {
-            return handler(xhr.responseText);
-          });
-          return xhr.send('title=Example%20Title&content=Example%20Content');
-        });
-        waitsFor(function() {
-          return handler.callCount > 0;
-        });
-        return runs(function() {
-          return expect(handler).toHaveBeenCalledWithJson({
+        return testAsyncResponse('POST', '/examples', {
+          requestData: 'title=Example%20Title&content=Example%20Content',
+          expectedJson: {
             id: 1,
             title: 'Example Title',
             content: 'Example Content'
-          });
+          }
         });
       });
       it('using JSON-encoded data', function() {
@@ -170,51 +182,28 @@
         });
       });
       it('handles multiple values for a given field', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('POST', '/examples');
-          xhr.addEventListener('load', function() {
-            return handler(xhr.responseText);
-          });
-          return xhr.send('values=foo&values=bar');
-        });
-        waitsFor(function() {
-          return handler.callCount > 0;
-        });
-        return runs(function() {
-          return expect(handler).toHaveBeenCalledWithJson({
+        return testAsyncResponse('POST', '/examples', {
+          requestData: 'values=foo&values=bar',
+          expectedJson: {
             id: 1,
             values: ['foo', 'bar']
-          });
+          }
         });
       });
       return it('adds the approprate foreign key for nested routes', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('POST', '/categories/1/examples');
-          xhr.addEventListener('load', function() {
-            return handler(xhr.responseText);
-          });
-          return xhr.send('title=Nested%20route%20example');
-        });
-        waitsFor(function() {
-          return handler.callCount > 0;
-        });
-        return runs(function() {
-          return expect(handler).toHaveBeenCalledWithJson({
+        return testAsyncResponse('POST', '/categories/1/examples', {
+          requestData: 'title=Nested%20route%20example',
+          expectedJson: {
             id: 1,
             category_id: 1,
             title: 'Nested route example'
-          });
+          }
         });
       });
     });
     describe('fetching records from subresource routes', function() {
-      var callback;
-      callback = null;
       beforeEach(function() {
+        var callback;
         Truman.Table('categories').insertMany([
           {
             name: 'Category 1'
@@ -237,22 +226,8 @@
         return callback = jasmine.createSpy();
       });
       return it('fetches only the records with the matching foreign key', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('GET', '/categories/2/examples');
-          xhr.onprogress = function() {
-            if (xhr.readyState === 4) {
-              return callback(xhr.responseText);
-            }
-          };
-          return xhr.send();
-        });
-        waitsFor(function() {
-          return callback.callCount > 0;
-        });
-        return runs(function() {
-          return expect(callback).toHaveBeenCalledWithJson([
+        return testAsyncResponse('GET', '/categories/2/examples', {
+          expectedJson: [
             {
               id: 2,
               category_id: 2,
@@ -262,13 +237,11 @@
               category_id: 2,
               title: 'Example 3'
             }
-          ]);
+          ]
         });
       });
     });
     return describe('fetching records with associations', function() {
-      var callback;
-      callback = null;
       beforeEach(function() {
         Truman.Table('directors').insertMany([
           {
@@ -279,7 +252,7 @@
             age: 44
           }
         ]);
-        Truman.Table('movies').insertMany([
+        return Truman.Table('movies').insertMany([
           {
             director_id: 1,
             title: 'Memento',
@@ -290,25 +263,10 @@
             year: 2000
           }
         ]);
-        return callback = jasmine.createSpy();
       });
       return it('joins the records with their associations one level deep', function() {
-        runs(function() {
-          var xhr;
-          xhr = new XMLHttpRequest();
-          xhr.open('GET', '/movies');
-          xhr.onprogress = function() {
-            if (xhr.readyState === 4) {
-              return callback(xhr.responseText);
-            }
-          };
-          return xhr.send();
-        });
-        waitsFor(function() {
-          return callback.callCount > 0;
-        });
-        return runs(function() {
-          return expect(callback).toHaveBeenCalledWithJson([
+        return testAsyncResponse('GET', '/movies', {
+          expectedJson: [
             {
               id: 1,
               title: 'Memento',
@@ -328,7 +286,7 @@
                 age: 44
               }
             }
-          ]);
+          ]
         });
       });
     });

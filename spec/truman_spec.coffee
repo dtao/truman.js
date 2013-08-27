@@ -13,6 +13,24 @@ describe 'Truman', ->
         expect(actualData).toEqual(data)
         true
 
+  testAsyncResponse = (method, route, options) ->
+    options ?= {}
+
+    handler = jasmine.createSpy()
+
+    runs ->
+      xhr = new XMLHttpRequest()
+      xhr.open(method, route)
+      xhr.addEventListener 'load', ->
+        handler(xhr.responseText)
+      xhr.send(options.requestData)
+
+    waitsFor ->
+      handler.callCount > 0
+
+    runs ->
+      expect(handler).toHaveBeenCalledWithJson(options.expectedJson)
+
   it 'supports setting request headers', ->
     activity = ->
       xhr = new XMLHttpRequest()
@@ -26,7 +44,7 @@ describe 'Truman', ->
     beforeEach ->
       handler = jasmine.createSpy()
 
-    runAsyncTest = (makeAjaxRequest) ->
+    testHandlerInterception = (makeAjaxRequest) ->
       runs(makeAjaxRequest)
 
       expectation = ->
@@ -43,7 +61,7 @@ describe 'Truman', ->
       xhr
 
     it 'added with the onload method', ->
-      runAsyncTest ->
+      testHandlerInterception ->
         xhr = createGetRequest()
         xhr.onload = ->
           if xhr.readyState == 4
@@ -51,7 +69,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with the onreadystatechange method', ->
-      runAsyncTest ->
+      testHandlerInterception ->
         xhr = createGetRequest()
         xhr.onreadystatechange = ->
           if xhr.readyState == 4
@@ -59,7 +77,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with the onprogress method', ->
-      runAsyncTest ->
+      testHandlerInterception ->
         xhr = createGetRequest()
         xhr.onprogress = ->
           if xhr.readyState == 4
@@ -67,7 +85,7 @@ describe 'Truman', ->
         xhr.send()
 
     it 'added with addEventListener("load")', ->
-      runAsyncTest ->
+      testHandlerInterception ->
         xhr = createGetRequest()
         xhr.addEventListener 'load', ->
           handler(xhr.responseText)
@@ -80,18 +98,9 @@ describe 'Truman', ->
       handler = jasmine.createSpy()
 
     it 'using form-encoded data', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/examples')
-        xhr.addEventListener 'load', ->
-          handler(xhr.responseText)
-        xhr.send('title=Example%20Title&content=Example%20Content')
-
-      waitsFor ->
-        handler.callCount > 0
-
-      runs ->
-        expect(handler).toHaveBeenCalledWithJson
+      testAsyncResponse 'POST', '/examples',
+        requestData: 'title=Example%20Title&content=Example%20Content'
+        expectedJson:
           id: 1
           title: 'Example Title'
           content: 'Example Content'
@@ -139,41 +148,21 @@ describe 'Truman', ->
           content: 'Example Content'
 
     it 'handles multiple values for a given field', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/examples')
-        xhr.addEventListener 'load', ->
-          handler(xhr.responseText)
-        xhr.send('values=foo&values=bar')
-
-      waitsFor ->
-        handler.callCount > 0
-
-      runs ->
-        expect(handler).toHaveBeenCalledWithJson
+      testAsyncResponse 'POST', '/examples',
+        requestData: 'values=foo&values=bar'
+        expectedJson:
           id: 1
           values: ['foo', 'bar']
 
     it 'adds the approprate foreign key for nested routes', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('POST', '/categories/1/examples')
-        xhr.addEventListener 'load', ->
-          handler(xhr.responseText)
-        xhr.send('title=Nested%20route%20example')
-
-      waitsFor ->
-        handler.callCount > 0
-
-      runs ->
-        expect(handler).toHaveBeenCalledWithJson
+      testAsyncResponse 'POST', '/categories/1/examples',
+        requestData: 'title=Nested%20route%20example'
+        expectedJson:
           id: 1
           category_id: 1
           title: 'Nested route example'
 
   describe 'fetching records from subresource routes', ->
-    callback = null
-
     beforeEach ->
       Truman.Table('categories').insertMany [
         { name: 'Category 1' },
@@ -189,26 +178,13 @@ describe 'Truman', ->
       callback = jasmine.createSpy()
 
     it 'fetches only the records with the matching foreign key', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('GET', '/categories/2/examples')
-        xhr.onprogress = ->
-          if xhr.readyState == 4
-            callback(xhr.responseText)
-        xhr.send()
-
-      waitsFor ->
-        callback.callCount > 0
-
-      runs ->
-        expect(callback).toHaveBeenCalledWithJson [
+      testAsyncResponse 'GET', '/categories/2/examples',
+        expectedJson: [
           { id: 2, category_id: 2, title: 'Example 2' },
           { id: 3, category_id: 2, title: 'Example 3' }
         ]
 
   describe 'fetching records with associations', ->
-    callback = null
-
     beforeEach ->
       Truman.Table('directors').insertMany [
         { name: 'Chris Nolan', age: 43 },
@@ -220,22 +196,9 @@ describe 'Truman', ->
         { director_id: 2, title: 'Reqiuem for a Dream', year: 2000 }
       ]
 
-      callback = jasmine.createSpy()
-
     it 'joins the records with their associations one level deep', ->
-      runs ->
-        xhr = new XMLHttpRequest()
-        xhr.open('GET', '/movies')
-        xhr.onprogress = ->
-          if xhr.readyState == 4
-            callback(xhr.responseText)
-        xhr.send()
-
-      waitsFor ->
-        callback.callCount > 0
-
-      runs ->
-        expect(callback).toHaveBeenCalledWithJson [
+      testAsyncResponse 'GET', '/movies',
+        expectedJson: [
           {
             id: 1,
             title: 'Memento',
