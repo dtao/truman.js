@@ -5,6 +5,8 @@ describe 'Truman', ->
 
     # This will make it easier to keep track of what's saved for each spec.
     Truman.Table('examples').drop()
+    Truman.Table('directors').drop()
+    Truman.Table('movies').drop()
 
   beforeEach ->
     this.addMatchers
@@ -204,4 +206,56 @@ describe 'Truman', ->
         expect(callback).toHaveBeenCalledWithJson [
           { id: 2, category_id: 2, title: 'Example 2' },
           { id: 3, category_id: 2, title: 'Example 3' }
+        ]
+
+  describe 'fetching records with associations', ->
+    callback = null
+
+    beforeEach ->
+      Truman.Table('directors').insertMany [
+        { name: 'Chris Nolan', age: 43 },
+        { name: 'Darren Aronofsky', age: 44 }
+      ]
+
+      Truman.Table('movies').insertMany [
+        { director_id: 1, title: 'Memento', year: 2000 },
+        { director_id: 2, title: 'Reqiuem for a Dream', year: 2000 }
+      ]
+
+      callback = jasmine.createSpy()
+
+    it 'joins the records with their associations one level deep', ->
+      runs ->
+        xhr = new XMLHttpRequest()
+        xhr.open('GET', '/movies')
+        xhr.onprogress = ->
+          if xhr.readyState == 4
+            callback(xhr.responseText)
+        xhr.send()
+
+      waitsFor ->
+        callback.callCount > 0
+
+      runs ->
+        expect(callback).toHaveBeenCalledWithJson [
+          {
+            id: 1,
+            title: 'Memento',
+            year: 2000,
+            director: {
+              id: 1,
+              name: 'Chris Nolan',
+              age: 43
+            }
+          },
+          {
+            id: 2,
+            title: 'Reqiuem for a Dream',
+            year: 2000,
+            director: {
+              id: 2,
+              name: 'Darren Aronofsky',
+              age: 44
+            }
+          }
         ]

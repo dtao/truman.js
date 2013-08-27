@@ -17,6 +17,8 @@
           rows = filter(rows, function(row) {
             return String(row[foreignKeyField]) === String(options.foreignKey);
           });
+        } else {
+          rows = api.joinRowsWithAssociations(rows);
         }
         return callback(rows);
       });
@@ -62,6 +64,30 @@
         table["delete"](recordId);
         return callback(record);
       });
+    },
+    joinRowsWithAssociations: function(rows) {
+      var joined, row, _i, _len;
+      joined = [];
+      for (_i = 0, _len = rows.length; _i < _len; _i++) {
+        row = rows[_i];
+        joined.push(api.joinRowWithAssociations(row));
+      }
+      return joined;
+    },
+    joinRowWithAssociations: function(row) {
+      var id, joined, key, tableName;
+      joined = {};
+      for (key in row) {
+        if (endsWith(key, '_id')) {
+          id = row[key];
+          key = chop(key, 3);
+          tableName = pluralize(key);
+          joined[key] = Table(tableName).get(id);
+        } else {
+          joined[key] = row[key];
+        }
+      }
+      return joined;
     }
   };
 
@@ -165,7 +191,7 @@
     };
 
     Table.prototype.get = function(id) {
-      return this.data.rows[id + 1];
+      return this.data.rows[id - 1];
     };
 
     Table.prototype.insert = function(data) {

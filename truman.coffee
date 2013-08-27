@@ -11,6 +11,9 @@ api =
         foreignKeyField = singularize(options.foreignTableName) + '_id'
         rows = filter rows, (row) ->
           String(row[foreignKeyField]) == String(options.foreignKey)
+      else
+        rows = api.joinRowsWithAssociations(rows)
+
       callback(rows)
 
   get: (tableName, recordId, callback) ->
@@ -41,6 +44,27 @@ api =
       record = table.get(recordId)
       table.delete(recordId)
       callback(record)
+
+  joinRowsWithAssociations: (rows) ->
+    joined = []
+    for row in rows
+      joined.push(api.joinRowWithAssociations(row))
+    joined
+
+  joinRowWithAssociations: (row) ->
+    joined = {}
+
+    for key of row
+      if endsWith(key, '_id')
+        id = row[key]
+        key = chop(key, 3)
+        tableName = pluralize(key)
+        joined[key] = Table(tableName).get(id)
+
+      else
+        joined[key] = row[key]
+
+    joined
 
 # ----- Equally crappy routing logic -----
 
@@ -119,7 +143,7 @@ class Table
     @data.rows
 
   get: (id) ->
-    @data.rows[id + 1]
+    @data.rows[id - 1]
 
   insert: (data) ->
     record = @_addRecord(data)

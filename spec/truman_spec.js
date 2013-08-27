@@ -4,7 +4,9 @@
   describe('Truman', function() {
     beforeEach(function() {
       Truman.delay = 0;
-      return Truman.Table('examples').drop();
+      Truman.Table('examples').drop();
+      Truman.Table('directors').drop();
+      return Truman.Table('movies').drop();
     });
     beforeEach(function() {
       return this.addMatchers({
@@ -211,7 +213,7 @@
         });
       });
     });
-    return describe('fetching records from subresource routes', function() {
+    describe('fetching records from subresource routes', function() {
       var callback;
       callback = null;
       beforeEach(function() {
@@ -261,6 +263,72 @@
               id: 3,
               category_id: 2,
               title: 'Example 3'
+            }
+          ]);
+        });
+      });
+    });
+    return describe('fetching records with associations', function() {
+      var callback;
+      callback = null;
+      beforeEach(function() {
+        Truman.Table('directors').insertMany([
+          {
+            name: 'Chris Nolan',
+            age: 43
+          }, {
+            name: 'Darren Aronofsky',
+            age: 44
+          }
+        ]);
+        Truman.Table('movies').insertMany([
+          {
+            director_id: 1,
+            title: 'Memento',
+            year: 2000
+          }, {
+            director_id: 2,
+            title: 'Reqiuem for a Dream',
+            year: 2000
+          }
+        ]);
+        return callback = jasmine.createSpy();
+      });
+      return it('joins the records with their associations one level deep', function() {
+        runs(function() {
+          var xhr;
+          xhr = new XMLHttpRequest();
+          xhr.open('GET', '/movies');
+          xhr.onprogress = function() {
+            if (xhr.readyState === 4) {
+              return callback(xhr.responseText);
+            }
+          };
+          return xhr.send();
+        });
+        waitsFor(function() {
+          return callback.callCount > 0;
+        });
+        return runs(function() {
+          return expect(callback).toHaveBeenCalledWithJson([
+            {
+              id: 1,
+              title: 'Memento',
+              year: 2000,
+              director: {
+                id: 1,
+                name: 'Chris Nolan',
+                age: 43
+              }
+            }, {
+              id: 2,
+              title: 'Reqiuem for a Dream',
+              year: 2000,
+              director: {
+                id: 2,
+                name: 'Darren Aronofsky',
+                age: 44
+              }
             }
           ]);
         });
