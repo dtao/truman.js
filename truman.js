@@ -25,7 +25,9 @@
     },
     get: function(tableName, recordId, callback) {
       return afterDelay(getDelay(), function() {
-        return callback(Table(tableName).get(recordId));
+        var row;
+        row = Table(tableName).get(recordId);
+        return callback(api.joinRowWithAssociations(row));
       });
     },
     update: function(tableName, recordId, data, contentType, callback) {

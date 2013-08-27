@@ -196,7 +196,7 @@ describe 'Truman', ->
         { director_id: 2, title: 'Reqiuem for a Dream', year: 2000 }
       ]
 
-    it 'joins the records with their associations one level deep', ->
+    it 'joins the records with their associations one level deep for "index"-like routes', ->
       testAsyncResponse 'GET', '/movies',
         expectedJson: [
           {
@@ -220,3 +220,14 @@ describe 'Truman', ->
             }
           }
         ]
+
+    it 'joins a record with its associations one level deep for "show"-like routes', ->
+      testAsyncResponse 'GET', '/movies/2',
+        expectedJson:
+          id: 2
+          title: 'Reqiuem for a Dream'
+          year: 2000
+          director:
+            id: 2
+            name: 'Darren Aronofsky'
+            age: 44

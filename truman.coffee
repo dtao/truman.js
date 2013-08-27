@@ -18,7 +18,8 @@ api =
 
   get: (tableName, recordId, callback) ->
     afterDelay getDelay(), ->
-      callback(Table(tableName).get(recordId))
+      row = Table(tableName).get(recordId)
+      callback(api.joinRowWithAssociations(row))
 
   update: (tableName, recordId, data, contentType, callback) ->
     data = parseData(data, contentType) if typeof data == 'string'

@@ -264,7 +264,7 @@
           }
         ]);
       });
-      return it('joins the records with their associations one level deep', function() {
+      it('joins the records with their associations one level deep for "index"-like routes', function() {
         return testAsyncResponse('GET', '/movies', {
           expectedJson: [
             {
@@ -287,6 +287,20 @@
               }
             }
           ]
+        });
+      });
+      return it('joins a record with its associations one level deep for "show"-like routes', function() {
+        return testAsyncResponse('GET', '/movies/2', {
+          expectedJson: {
+            id: 2,
+            title: 'Reqiuem for a Dream',
+            year: 2000,
+            director: {
+              id: 2,
+              name: 'Darren Aronofsky',
+              age: 44
+            }
+          }
         });
       });
     });
