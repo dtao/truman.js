@@ -197,6 +197,18 @@ class Table
 
 window.Truman =
   Table: Table
+
+  dropTables: ->
+    for tableName of DB.tables
+      Table(tableName).drop()
+
+    otherTables = filter Object.keys(localStorage), (key) ->
+      startsWith(key, '__truman__')
+
+    for table in otherTables
+      tableName = table.substring('__truman__'.length)
+      Table(tableName).drop()
+
   delay: 1000
 
 getDelay = ->
@@ -296,6 +308,9 @@ pluralize = (word) ->
 
 lastChar = (word) ->
   word.charAt(word.length - 1)
+
+startsWith = (word, prefix) ->
+  word.substring(0, prefix.length) == prefix
 
 endsWith = (word, suffix) ->
   word.substring(word.length - suffix.length) == suffix

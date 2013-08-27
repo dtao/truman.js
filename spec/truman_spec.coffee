@@ -4,9 +4,7 @@ describe 'Truman', ->
     Truman.delay = 0
 
     # This will make it easier to keep track of what's saved for each spec.
-    Truman.Table('examples').drop()
-    Truman.Table('directors').drop()
-    Truman.Table('movies').drop()
+    Truman.dropTables()
 
   beforeEach ->
     this.addMatchers

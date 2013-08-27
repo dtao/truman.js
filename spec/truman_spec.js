@@ -4,9 +4,7 @@
   describe('Truman', function() {
     beforeEach(function() {
       Truman.delay = 0;
-      Truman.Table('examples').drop();
-      Truman.Table('directors').drop();
-      return Truman.Table('movies').drop();
+      return Truman.dropTables();
     });
     beforeEach(function() {
       return this.addMatchers({
