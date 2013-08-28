@@ -58,14 +58,25 @@ api =
     for key of row
       if endsWith(key, '_id')
         id = row[key]
-        key = chop(key, 3)
-        tableName = pluralize(key)
-        joined[key] = Table(tableName).get(id)
+        assoc_key = chop(key, 3)
+        tableName = api.inferTableName(assoc_key)
+        if tableName?
+          joined[assoc_key] = Table(tableName).get(id)
+          continue
 
-      else
-        joined[key] = row[key]
+      joined[key] = row[key]
 
     joined
+
+  inferTableName: (name) ->
+    parts = name.split('_')
+    while parts.length > 0
+      tableName = pluralize(parts.join('_'))
+      if Table.exists(tableName)
+        return tableName
+      parts.shift()
+
+    null
 
 # ----- Equally crappy routing logic -----
 
@@ -178,6 +189,12 @@ class Table
     delete DB.tables[@name]
     delete localStorage[@_prefixedName()]
 
+  @exists: (name) ->
+    !!(@_prefixName(name) of localStorage)
+
+  @_prefixName: (name) ->
+    "__truman__#{name}"
+
   _addRecord: (data) ->
     record = merge(data, { id: @_getNextId() })
     @data.rows.push(record)
@@ -192,7 +209,7 @@ class Table
     @data.rows.length + 1
 
   _prefixedName: ->
-    "__truman__#{@name}"
+    Table._prefixName(@name)
 
 # ----- The teensy weensy little API we'll expose
 

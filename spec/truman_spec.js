@@ -241,7 +241,7 @@
         });
       });
     });
-    return describe('fetching records with associations', function() {
+    describe('fetching records with associations', function() {
       beforeEach(function() {
         Truman.Table('directors').insertMany([
           {
@@ -300,6 +300,52 @@
               name: 'Darren Aronofsky',
               age: 44
             }
+          }
+        });
+      });
+    });
+    return describe('inferring associations', function() {
+      beforeEach(function() {
+        Truman.Table('producers').insertMany([
+          {
+            name: 'Christopher Nolan'
+          }, {
+            name: 'Thomas Tull'
+          }
+        ]);
+        return Truman.Table('movies').insertMany([
+          {
+            title: 'Inception',
+            producer_id: 1,
+            executive_producer_id: 2
+          }, {
+            title: 'The Dark Knight Rises',
+            imdb_id: 1345836
+          }
+        ]);
+      });
+      it('works for fields with identifiable suffixes', function() {
+        return testAsyncResponse('GET', '/movies/1', {
+          expectedJson: {
+            id: 1,
+            title: 'Inception',
+            producer: {
+              id: 1,
+              name: 'Christopher Nolan'
+            },
+            executive_producer: {
+              id: 2,
+              name: 'Thomas Tull'
+            }
+          }
+        });
+      });
+      return it("leaves the field alone if it doesn't seem to correspond to a table", function() {
+        return testAsyncResponse('GET', '/movies/2', {
+          expectedJson: {
+            id: 2,
+            title: 'The Dark Knight Rises',
+            imdb_id: 1345836
           }
         });
       });

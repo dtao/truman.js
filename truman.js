@@ -77,19 +77,33 @@
       return joined;
     },
     joinRowWithAssociations: function(row) {
-      var id, joined, key, tableName;
+      var assoc_key, id, joined, key, tableName;
       joined = {};
       for (key in row) {
         if (endsWith(key, '_id')) {
           id = row[key];
-          key = chop(key, 3);
-          tableName = pluralize(key);
-          joined[key] = Table(tableName).get(id);
-        } else {
-          joined[key] = row[key];
+          assoc_key = chop(key, 3);
+          tableName = api.inferTableName(assoc_key);
+          if (tableName != null) {
+            joined[assoc_key] = Table(tableName).get(id);
+            continue;
+          }
         }
+        joined[key] = row[key];
       }
       return joined;
+    },
+    inferTableName: function(name) {
+      var parts, tableName;
+      parts = name.split('_');
+      while (parts.length > 0) {
+        tableName = pluralize(parts.join('_'));
+        if (Table.exists(tableName)) {
+          return tableName;
+        }
+        parts.shift();
+      }
+      return null;
     }
   };
 
@@ -252,6 +266,14 @@
       return delete localStorage[this._prefixedName()];
     };
 
+    Table.exists = function(name) {
+      return !!(this._prefixName(name) in localStorage);
+    };
+
+    Table._prefixName = function(name) {
+      return "__truman__" + name;
+    };
+
     Table.prototype._addRecord = function(data) {
       var record;
       record = merge(data, {
@@ -273,7 +295,7 @@
     };
 
     Table.prototype._prefixedName = function() {
-      return "__truman__" + this.name;
+      return Table._prefixName(this.name);
     };
 
     return Table;

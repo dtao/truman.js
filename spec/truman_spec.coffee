@@ -231,3 +231,41 @@ describe 'Truman', ->
             id: 2
             name: 'Darren Aronofsky'
             age: 44
+
+  describe 'inferring associations', ->
+    beforeEach ->
+      Truman.Table('producers').insertMany [
+        { name: 'Christopher Nolan' },
+        { name: 'Thomas Tull' }
+      ]
+
+      Truman.Table('movies').insertMany [
+        {
+          title: 'Inception',
+          producer_id: 1,
+          executive_producer_id: 2
+        },
+        {
+          title: 'The Dark Knight Rises',
+          imdb_id: 1345836
+        }
+      ]
+
+    it 'works for fields with identifiable suffixes', ->
+      testAsyncResponse 'GET', '/movies/1',
+        expectedJson:
+          id: 1
+          title: 'Inception'
+          producer:
+            id: 1
+            name: 'Christopher Nolan'
+          executive_producer:
+            id: 2
+            name: 'Thomas Tull'
+
+    it "leaves the field alone if it doesn't seem to correspond to a table", ->
+      testAsyncResponse 'GET', '/movies/2',
+        expectedJson:
+          id: 2
+          title: 'The Dark Knight Rises'
+          imdb_id: 1345836
