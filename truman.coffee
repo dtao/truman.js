@@ -86,7 +86,7 @@ class Route
 
     parts = compact(url.split('/'))
     @tableName = if parts.length > 2 then parts[2] else parts[0]
-    @recordId = parts[1] if parts.length > 1
+    @recordId = Number(parts[1]) if parts.length > 1
     @foreignTableName = parts[0] if parts.length > 2
 
   call: (data, contentType, callback) ->
@@ -180,7 +180,7 @@ class Table
     records
 
   delete: (id) ->
-    @data.rows[id + 1] = undefined
+    @data.rows[id - 1] = undefined
 
   save: ->
     localStorage[@_prefixedName()] = JSON.stringify(@data)
@@ -202,7 +202,7 @@ class Table
 
   _updateRecord: (id, data) ->
     record = merge(@get(id), data)
-    @data.rows[id + 1] = record
+    @data.rows[id - 1] = record
     record
 
   _getNextId: ->

@@ -162,6 +162,26 @@ describe 'Truman', ->
           category_id: 1
           title: 'Nested route example'
 
+  describe 'updates existing records when sending POST requests to resource URLs', ->
+    beforeEach ->
+      Truman.Table('dishes').insert
+        name: 'lasagna'
+        rating: 'tasty'
+
+    it 'using form-encoded data', ->
+      testAsyncResponse 'POST', '/dishes/1',
+        requestData: 'rating=delicious'
+        expectedJson:
+          id: 1
+          name: 'lasagna'
+          rating: 'delicious'
+
+      testAsyncResponse 'GET', '/dishes/1',
+        expectedJson:
+          id: 1
+          name: 'lasagna'
+          rating: 'delicious'
+
   describe 'fetching records from subresource routes', ->
     beforeEach ->
       Truman.Table('categories').insertMany [

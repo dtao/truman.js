@@ -115,7 +115,7 @@
       parts = compact(url.split('/'));
       this.tableName = parts.length > 2 ? parts[2] : parts[0];
       if (parts.length > 1) {
-        this.recordId = parts[1];
+        this.recordId = Number(parts[1]);
       }
       if (parts.length > 2) {
         this.foreignTableName = parts[0];
@@ -254,7 +254,7 @@
     };
 
     Table.prototype["delete"] = function(id) {
-      return this.data.rows[id + 1] = void 0;
+      return this.data.rows[id - 1] = void 0;
     };
 
     Table.prototype.save = function() {
@@ -286,7 +286,7 @@
     Table.prototype._updateRecord = function(id, data) {
       var record;
       record = merge(this.get(id), data);
-      this.data.rows[id + 1] = record;
+      this.data.rows[id - 1] = record;
       return record;
     };
 

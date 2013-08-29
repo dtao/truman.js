@@ -201,6 +201,31 @@
         });
       });
     });
+    describe('updates existing records when sending POST requests to resource URLs', function() {
+      beforeEach(function() {
+        return Truman.Table('dishes').insert({
+          name: 'lasagna',
+          rating: 'tasty'
+        });
+      });
+      return it('using form-encoded data', function() {
+        testAsyncResponse('POST', '/dishes/1', {
+          requestData: 'rating=delicious',
+          expectedJson: {
+            id: 1,
+            name: 'lasagna',
+            rating: 'delicious'
+          }
+        });
+        return testAsyncResponse('GET', '/dishes/1', {
+          expectedJson: {
+            id: 1,
+            name: 'lasagna',
+            rating: 'delicious'
+          }
+        });
+      });
+    });
     describe('fetching records from subresource routes', function() {
       beforeEach(function() {
         var callback;
