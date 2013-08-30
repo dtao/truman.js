@@ -77,19 +77,19 @@
       return joined;
     },
     joinRowWithAssociations: function(row) {
-      var assoc_key, id, joined, key, tableName;
+      var id, joined, key, tableName;
       joined = {};
       for (key in row) {
+        joined[key] = row[key];
         if (endsWith(key, '_id')) {
           id = row[key];
-          assoc_key = chop(key, 3);
-          tableName = api.inferTableName(assoc_key);
+          key = chop(key, 3);
+          tableName = api.inferTableName(key);
           if (tableName != null) {
-            joined[assoc_key] = Table(tableName).get(id);
+            joined[key] = Table(tableName).get(id);
             continue;
           }
         }
-        joined[key] = row[key];
       }
       return joined;
     },

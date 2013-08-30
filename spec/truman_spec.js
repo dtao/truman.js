@@ -296,6 +296,7 @@
               id: 1,
               title: 'Memento',
               year: 2000,
+              director_id: 1,
               director: {
                 id: 1,
                 name: 'Chris Nolan',
@@ -305,6 +306,7 @@
               id: 2,
               title: 'Reqiuem for a Dream',
               year: 2000,
+              director_id: 2,
               director: {
                 id: 2,
                 name: 'Darren Aronofsky',
@@ -320,6 +322,7 @@
             id: 2,
             title: 'Reqiuem for a Dream',
             year: 2000,
+            director_id: 2,
             director: {
               id: 2,
               name: 'Darren Aronofsky',
@@ -354,10 +357,12 @@
           expectedJson: {
             id: 1,
             title: 'Inception',
+            producer_id: 1,
             producer: {
               id: 1,
               name: 'Christopher Nolan'
             },
+            executive_producer_id: 2,
             executive_producer: {
               id: 2,
               name: 'Thomas Tull'
