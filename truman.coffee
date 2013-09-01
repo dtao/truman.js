@@ -152,7 +152,7 @@ class Table
     @data.name
 
   rows: ->
-    @data.rows
+    compact(@data.rows)
 
   get: (id) ->
     @data.rows[id - 1]
@@ -181,6 +181,7 @@ class Table
 
   delete: (id) ->
     @data.rows[id - 1] = undefined
+    @save()
 
   save: ->
     localStorage[@_prefixedName()] = JSON.stringify(@data)

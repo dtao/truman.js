@@ -203,7 +203,7 @@
     };
 
     Table.prototype.rows = function() {
-      return this.data.rows;
+      return compact(this.data.rows);
     };
 
     Table.prototype.get = function(id) {
@@ -254,7 +254,8 @@
     };
 
     Table.prototype["delete"] = function(id) {
-      return this.data.rows[id - 1] = void 0;
+      this.data.rows[id - 1] = void 0;
+      return this.save();
     };
 
     Table.prototype.save = function() {
